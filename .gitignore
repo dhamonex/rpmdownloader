@@ -6,4 +6,5 @@
 ui_*
 moc_*
 qrc_*
-.kdev4
+*.kdev4
+build
