@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>profileSettingsDialog</class>
+ <widget class="QDialog" name="profileSettingsDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>392</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Profile Settings</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QGroupBox" name="ProfileNameGroupBox">
+     <property name="title">
+      <string>Profile Name</string>
+     </property>
+     <layout class="QHBoxLayout">
+      <item>
+       <widget class="QLabel" name="profileNameLabel">
+        <property name="text">
+         <string>&amp;Profile Name:</string>
+        </property>
+        <property name="buddy">
+         <cstring>profileNameLineEdit</cstring>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="profileNameLineEdit">
+        <property name="minimumSize">
+         <size>
+          <width>272</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="whatsThis">
+         <string>Give the repository a name.</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <spacer>
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>382</width>
+       <height>16</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="profileSettingsGroupBox">
+     <property name="title">
+      <string>Profile Settings</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="0" colspan="2">
+       <widget class="QLabel" name="completeUrlLabel">
+        <property name="text">
+         <string>Copmlete &amp;URL:</string>
+        </property>
+        <property name="buddy">
+         <cstring>downloadDirLineEdit</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QLineEdit" name="completeUrlLineEdit">
+        <property name="whatsThis">
+         <string>Enter the complete remote url.</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" colspan="2">
+       <widget class="QLabel" name="downloadDirLabel">
+        <property name="text">
+         <string>D&amp;ownload Directory:</string>
+        </property>
+        <property name="buddy">
+         <cstring>downloadDirLineEdit</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <layout class="QHBoxLayout">
+        <item>
+         <widget class="QLineEdit" name="downloadDirLineEdit">
+          <property name="whatsThis">
+           <string>Specify a download destination directory for this profile.</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="browseDownloadDirButton">
+          <property name="text">
+           <string>...</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="RepositoryTypeLabel">
+        <property name="text">
+         <string>Reposytory Type:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1" colspan="2">
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QComboBox" name="repositoryTypeComboBox">
+          <property name="whatsThis">
+           <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Sans Serif'; font-size:10pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;You have the choice for &lt;span style=&quot; font-weight:600;&quot;&gt;plain&lt;/span&gt; or &lt;span style=&quot; font-weight:600;&quot;&gt;yum&lt;/span&gt;. Plain downloads the repository contents via simple directory listings wehreas yum uses repomd file for getting the contents of the repoitory and therefore this provides more meta information and hence allows dependency solving.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <item>
+           <property name="text">
+            <string>Plain</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Yum</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_2">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item row="3" column="0" colspan="3">
+       <layout class="QGridLayout">
+        <item row="0" column="0">
+         <widget class="QLabel" name="architecureLabel">
+          <property name="text">
+           <string>Architecures:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QCheckBox" name="i586CheckBox">
+          <property name="text">
+           <string>i586</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QCheckBox" name="i686CheckBox">
+          <property name="text">
+           <string>i686</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QCheckBox" name="noarchCheckBox">
+          <property name="text">
+           <string>noarch</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QCheckBox" name="x86_64CheckBox">
+          <property name="text">
+           <string>x86_64</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout">
+     <item>
+      <spacer>
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>71</width>
+         <height>31</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="okButton">
+       <property name="text">
+        <string>OK</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="cancelButton">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+  <zorder>ProfileNameGroupBox</zorder>
+  <zorder>profileSettingsGroupBox</zorder>
+  <zorder></zorder>
+ </widget>
+ <tabstops>
+  <tabstop>profileNameLineEdit</tabstop>
+  <tabstop>completeUrlLineEdit</tabstop>
+  <tabstop>downloadDirLineEdit</tabstop>
+  <tabstop>browseDownloadDirButton</tabstop>
+  <tabstop>repositoryTypeComboBox</tabstop>
+  <tabstop>i586CheckBox</tabstop>
+  <tabstop>i686CheckBox</tabstop>
+  <tabstop>x86_64CheckBox</tabstop>
+  <tabstop>noarchCheckBox</tabstop>
+  <tabstop>okButton</tabstop>
+  <tabstop>cancelButton</tabstop>
+ </tabstops>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>okButton</sender>
+   <signal>clicked()</signal>
+   <receiver>profileSettingsDialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>244</x>
+     <y>335</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>12</x>
+     <y>328</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cancelButton</sender>
+   <signal>clicked()</signal>
+   <receiver>profileSettingsDialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>310</x>
+     <y>333</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>387</x>
+     <y>332</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

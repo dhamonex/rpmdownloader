@@ -1,0 +1,249 @@
+<ui version="4.0" >
+ <class>RpmDownloaderSettingsDialog</class>
+ <widget class="QDialog" name="RpmDownloaderSettingsDialog" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>377</width>
+    <height>309</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>RPM Downloader Settings</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout" >
+   <item>
+    <layout class="QHBoxLayout" >
+     <item>
+      <widget class="QLabel" name="repositoryUpdateIntervalLabel" >
+       <property name="text" >
+        <string>Repository update interval</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSpinBox" name="updateIntervalSpinBox" >
+       <property name="whatsThis" >
+        <string>Interval between updating the profiles.</string>
+       </property>
+       <property name="maximum" >
+        <number>999</number>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="keepOldVersionsCheckBox" >
+     <property name="whatsThis" >
+      <string>Delete obsolete RPMs when a newer version is downloaded. The old RPM is only needed in some exception cases so check this if you want to safe some local disk space.</string>
+     </property>
+     <property name="text" >
+      <string>Delete old RPM versions</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="useMemDbCheckBox" >
+     <property name="whatsThis" >
+      <string>This loads the complete database from this repository into the memory which dramatically increases the speed during solving the dependencies of a RPM but uses a bit more memory.</string>
+     </property>
+     <property name="text" >
+      <string>Load database into memory when solving dependencies</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="doCheckSumCheck" >
+     <property name="whatsThis" >
+      <string>This loads the complete database from this repository into the memory which dramatically increases the speed during solving the dependencies of a RPM but uses a bit more memory.</string>
+     </property>
+     <property name="text" >
+      <string>Perform a check sum check after downloading a RPM</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QGridLayout" name="gridLayout" >
+     <item row="0" column="0" >
+      <widget class="QLabel" name="cacheDirLabel" >
+       <property name="text" >
+        <string>Cache Directory:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1" >
+      <widget class="QLineEdit" name="cacheDirLineEdit" >
+       <property name="whatsThis" >
+        <string>Specify the cache base directory for the individual repository caches for each profile.</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2" >
+      <widget class="QPushButton" name="selectCacheDirPushButton" >
+       <property name="text" >
+        <string>Browse</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0" >
+      <widget class="QLabel" name="tempDirLabel" >
+       <property name="text" >
+        <string>Temp Directory:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1" >
+      <widget class="QLineEdit" name="tempDirLineEdit" >
+       <property name="whatsThis" >
+        <string>Specify a temp directory for temporary files e.g. /tmp</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="2" >
+      <widget class="QPushButton" name="selectTempDirPushButton" >
+       <property name="text" >
+        <string>Browse</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0" >
+      <widget class="QLabel" name="checkSumCommandLabel" >
+       <property name="text" >
+        <string>checksum command:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1" >
+      <widget class="QLineEdit" name="checksumCommandLineEdit" >
+       <property name="whatsThis" >
+        <string>To verify the checksum of the repomd file you can specify the path to sha1sum on your system.</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0" >
+      <widget class="QLabel" name="gunzipCommandLabel" >
+       <property name="text" >
+        <string>gunzip command:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1" >
+      <widget class="QLineEdit" name="gunzipCommandLineEdit" >
+       <property name="whatsThis" >
+        <string>Some repository information needs to be extracted before they can be used to build the repository cache. Specify here the path to the gunzip program.</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout" >
+     <item>
+      <widget class="QLabel" name="maxReadInMemLabel" >
+       <property name="text" >
+        <string>Maximum read in memory primary file size:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSpinBox" name="maxPrimaryMemSizeSpinBox" >
+       <property name="whatsThis" >
+        <string>The primary.xml file contains the remote repository details. When the file is smaller than this specifies size it is completly loaded into memory before parsing the XML date. This increases the performance but consumes more memory.</string>
+       </property>
+       <property name="suffix" >
+        <string> M</string>
+       </property>
+       <property name="maximum" >
+        <number>1000</number>
+       </property>
+       <property name="value" >
+        <number>30</number>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="Line" name="line" >
+     <property name="orientation" >
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" >
+     <property name="spacing" >
+      <number>6</number>
+     </property>
+     <property name="margin" >
+      <number>0</number>
+     </property>
+     <item>
+      <spacer>
+       <property name="orientation" >
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0" >
+        <size>
+         <width>131</width>
+         <height>31</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="okButton" >
+       <property name="text" >
+        <string>OK</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="cancelButton" >
+       <property name="text" >
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>okButton</sender>
+   <signal>clicked()</signal>
+   <receiver>RpmDownloaderSettingsDialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>278</x>
+     <y>253</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>96</x>
+     <y>254</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cancelButton</sender>
+   <signal>clicked()</signal>
+   <receiver>RpmDownloaderSettingsDialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>369</x>
+     <y>253</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>179</x>
+     <y>282</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

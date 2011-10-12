@@ -1,0 +1,36 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+	<file>images/newVersion.png</file>
+	<file>images/ok.png</file>
+	<file>images/localAvail.png</file>
+	<file>images/notOk.png</file>
+	<file>images/unknown.png</file>
+	<file>images/rpm.png</file>
+	<file>images/add.png</file>
+	<file>images/addRpm.png</file>
+	<file>images/avail.png</file>
+	<file>images/remove.png</file>
+	<file>images/new.png</file>
+	<file>images/save.png</file>
+	<file>images/open.png</file>
+	<file>images/downloadOne.png</file>
+	<file>images/downloadAll.png</file>
+	<file>images/refresh.png</file>
+	<file>images/duplicate.png</file>
+	<file>images/copy.png</file>
+	<file>images/cut.png</file>
+	<file>images/paste.png</file>
+	<file>images/removeRpmFromDisk.png</file>
+	<file>images/removeAllRpmsFromDisk.png</file>
+	<file>images/changeSettings.png</file>
+	<file>images/editProfile.png</file>
+	<file>images/editRpmName.png</file>
+	<file>images/resolveDeps.png</file>
+	<file>images/edit-clear.png</file>
+	<file>images/increaseButtonSize.png</file>
+	<file>images/decreaseButtonSize.png</file>
+	<file>images/clearCache.png</file>
+	<file>rpmdownloader_de.qm</file>
+	<file>qt_de.qm</file>
+</qresource>
+</RCC>
