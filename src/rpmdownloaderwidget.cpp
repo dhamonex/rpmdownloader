@@ -307,6 +307,9 @@ void RpmDownloaderWidget::deleteCurrentItemsFromActiveTable()
         emit( modified() );
 
         checkForPackagesInAllProfiles();
+        
+        clearAndInsertPackagesTable(profilesTableWidget->currentRow(), -1, -1, -1);
+        profilesTableWidgetSelectionChanged();
 
     } else if ( packagesTableWidget->hasFocus() && row >= 0 ) {
         QList<QTableWidgetItem *> selectedPackageItems = packagesTableWidget->selectedItems();
