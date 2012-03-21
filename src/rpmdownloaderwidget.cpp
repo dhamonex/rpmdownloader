@@ -1415,5 +1415,6 @@ void RpmDownloaderWidget::cleanOrphanedPackageEntries()
         emit( modified() );
 
     clearAndInsertPackagesTable( row, 0, -1, 0 );  // force redraw of packages
+    computeAndEmitStats();
 }
 
