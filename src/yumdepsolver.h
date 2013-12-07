@@ -47,7 +47,7 @@ class YumDepSolver : public RDDatabaseHandler
 		
 		void checkNextRpm();
 		
-		enum {MaxRPMToInspect = 300}; // do net check more rpms let it fail instead
+		enum {MaxRPMToInspect = 3000}; // do net check more rpms let it fail instead
 		
 		QStringList requiredRpms;
 		QStringList packagesToCheck;
