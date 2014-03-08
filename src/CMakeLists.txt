@@ -1,4 +1,3 @@
-
 include(${QT_USE_FILE})
 
 set(rpmdownloader_SRCS

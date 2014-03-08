@@ -28,6 +28,7 @@
 #include "rpmdownloadersettingsdialog.h"
 #include "searchfieldlineedit.h"
 #include "packagedetailsdialog.h"
+#include "version.h"
 
 
 MainWindow::MainWindow()
@@ -860,7 +861,7 @@ void MainWindow::changeSettingsViaDialog()
 void MainWindow::about()
 {
   QMessageBox::about ( this, tr ( "About rpmdownloader" ),
-                       tr ( "<h2>RPMDownloader V. 0.11.2</h2>"
+                       tr ( "<h2>RPMDownloader version. " RPMDOWNLOADER_VERSION "</h2>"
                             "<p>RPMDownloader is for downloading a set of RPMs from"
                             "<br/>different RPM repositories. It also informs you if a newer version"
                             "<br/>is available and allows you to redownload only the changed RPMs"
