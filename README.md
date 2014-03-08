@@ -1,3 +1,6 @@
+RpmDoenloader
+=============
+
 RpmDownloader is a small application which can mirror a subset of RPMs from a specified repository. But it is more than a simple mirror tool it helps you finding the RPM, can resolve dependencies (only for the selected repository and only yum repositories), informs you if a newer version is available and then downloads only the updated/missing packages.
 
 Why this tool?
