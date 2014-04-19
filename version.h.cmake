@@ -18,9 +18,9 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef 927EBE1AF0385CE3B92DABB3B9B7CE4D
-#define 927EBE1AF0385CE3B92DABB3B9B7CE4D
+#ifndef VERSION_H
+#define VERSION_H
 
 #define RPMDOWNLOADER_VERSION "${rpmdownloader_VERSION}"
 
-#endif // 927EBE1AF0385CE3B92DABB3B9B7CE4D
+#endif // VERSION_H
