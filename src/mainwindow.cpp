@@ -20,6 +20,7 @@
 #include "mainwindow.h"
 
 #include <QtGui>
+#include <curl/curl.h>
 
 #include "rpmdownloaderwidget.h"
 #include "profilesettingsdialog.h"
@@ -34,6 +35,8 @@
 MainWindow::MainWindow()
     : QMainWindow(), addRpmsState ( false ), rpmActionsState ( false ), profileActionsState ( true ), profileDownloadActionState ( false ), globalRpmsActionsState ( false )
 {
+  curl_global_init( CURL_GLOBAL_ALL );
+  
   rpmDownloaderWidget = new RpmDownloaderWidget;
   setCentralWidget ( rpmDownloaderWidget );
 

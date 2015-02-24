@@ -19,9 +19,6 @@
  ***************************************************************************/
 #include "downloadprogressdialog.h"
 
-#include <QFtp>
-#include "rdhttp.h"
-
 #include "rpmdownloadersettings.h"
 #include "checksumcheck.h"
 
@@ -32,19 +29,19 @@ DownloadProgressDialog::DownloadProgressDialog ( QWidget* parent, Qt::WFlags fl 
 {
   setupUi ( this );
 
-  ftp = new QFtp ( this );
-  http = new RDHttp ( this );
+//   ftp = new QFtp ( this );
+//   http = new RDHttp ( this );
   checkSumChecker = new CheckSumCheck ( this );
   layout()->setSizeConstraint ( QLayout::SetFixedSize );
 
   connect ( this, SIGNAL ( readyForDownload() ), this, SLOT ( startDownload() ) );
   connect ( abortPushButton, SIGNAL ( clicked() ), this, SLOT ( abortDownloads() ) );
 
-  connect ( ftp, SIGNAL ( dataTransferProgress ( qint64, qint64 ) ), this, SLOT ( updateTransferProgress ( qint64, qint64 ) ) );
-  connect ( ftp, SIGNAL ( done ( bool ) ), this, SLOT ( ftpFinished ( bool ) ) );
+//   connect ( ftp, SIGNAL ( dataTransferProgress ( qint64, qint64 ) ), this, SLOT ( updateTransferProgress ( qint64, qint64 ) ) );
+//   connect ( ftp, SIGNAL ( done ( bool ) ), this, SLOT ( ftpFinished ( bool ) ) );
 
-  connect ( http, SIGNAL ( dataReadProgress ( int, int ) ), this, SLOT ( httpTransferData ( int, int ) ) );
-  connect ( http, SIGNAL ( downloadWithRedirectToFileFinished ( bool ) ), this, SLOT ( httpFinished ( bool ) ) );
+//   connect ( http, SIGNAL ( dataReadProgress ( int, int ) ), this, SLOT ( httpTransferData ( int, int ) ) );
+//   connect ( http, SIGNAL ( downloadWithRedirectToFileFinished ( bool ) ), this, SLOT ( httpFinished ( bool ) ) );
 
   connect ( checkSumChecker, SIGNAL ( checkFinished ( bool ) ), this, SLOT ( checkSumFinished ( bool ) ) );
   connect ( checkSumChecker, SIGNAL ( checkFailed ( QString ) ), this, SLOT ( checkSumError ( QString ) ) );
@@ -67,17 +64,17 @@ void DownloadProgressDialog::setProfilesForDownload ( RepositoryProfile* profile
 
 void DownloadProgressDialog::abortDownloads()
 {
-  if ( ftp->state() != QFtp::Unconnected ) {
-    ftp->clearPendingCommands();
-    ftp->close();
-    // ftp->abort();
-  }
-
-  if ( http->state() != QHttp::Unconnected ) {
-    http->clearPendingRequests();
-    http->closeConnection();
-    // http->abort();
-  }
+//   /*if ( ftp->state() != QFtp::Unconnected ) {
+//     ftp->clearPendingCommands();
+//     ftp->close();
+//     // ftp->abort();
+//   }
+// 
+//   if ( http->state() != QHttp::Unconnected ) {
+//     http->clearPendingRequests();
+//     http->closeConnection();
+//     // http->abort();
+//   }
 
   if ( oldProfileUrl.isValid() && currentProfile >= 0 ) {
     profiles[currentProfile]->setServerUrl ( oldProfileUrl );
@@ -185,19 +182,19 @@ void DownloadProgressDialog::downloadCurrentPackage()
   rpmNameLabel->setText ( currentOnlineFilename );
 
   if ( url.scheme() == "ftp" ) {
-    ftp->connectToHost ( url.host(), url.port ( 21 ) );
-    ftp->login();
-    ftp->get ( url.path(), &currentFile );
-    ftp->close();
+//     ftp->connectToHost ( url.host(), url.port ( 21 ) );
+//     ftp->login();
+//     ftp->get ( url.path(), &currentFile );
+//     ftp->close();*/
     qDebug ( "Downloading %s to file %s", qPrintable ( url.toString() ), qPrintable ( currentFile.fileName() ) );
 
   } else if ( url.scheme() == "http" ) {
-    http->setHost ( url.host(), url.port ( 80 ) );
+//     http->setHost ( url.host(), url.port ( 80 ) );
 
-    QHttpRequestHeader header ( "GET", url.path() );
-    header.setValue ( "Host", url.host() );
+//     QHttpRequestHeader header ( "GET", url.path() );
+//     header.setValue ( "Host", url.host() );
     //http->request(header, 0, &currentFile);
-    http->downloadWithRedirectToFile ( header, &currentFile );
+//     http->downloadWithRedirectToFile ( header, &currentFile );
 
     qDebug ( "Downloading %s to file %s", qPrintable ( url.toString() ), qPrintable ( currentFile.fileName() ) );
 
@@ -213,7 +210,7 @@ void DownloadProgressDialog::ftpFinished ( bool error )
   // qDebug("finished %s", qPrintable(currentFile.fileName()));
 
   if ( error ) {
-    errorMsg = tr ( "FTP transfer error: %1" ).arg ( ftp->errorString() );
+//     errorMsg = tr ( "FTP transfer error: %1" ).arg ( ftp->errorString() );
     abortDownloads();
 
   } else {
@@ -231,7 +228,7 @@ void DownloadProgressDialog::httpFinished ( bool error )
   currentFile.close();
 
   if ( error ) {
-    errorMsg = tr ( "HTTP transfer error: %1" ).arg ( http->errorString() );
+//     errorMsg = tr ( "HTTP transfer error: %1" ).arg ( http->errorString() );
     abortDownloads();
     qDebug ( "http error %s", qPrintable ( errorMsg ) );
 

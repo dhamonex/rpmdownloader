@@ -24,14 +24,10 @@
 #include <QMap>
 #include <QStringList>
 #include <QUrl>
-#include <QUrlInfo>
 #include <QDir>
 
+#include "asynccurlhandle.h"
 #include "repositoryprofile.h"
-
-class RDHttp;
-
-class QFtp;
 
 class AbstractContentDownloader : public QObject
 {
@@ -63,8 +59,8 @@ class AbstractContentDownloader : public QObject
     QString repoName;
     QString dbPath;
     volatile bool aborted;
-    QFtp *ftp;
-    RDHttp *http;
+    
+    AsyncCurlHandle *m_curl;
 
     QStringList archs;
     QString repoUrl;

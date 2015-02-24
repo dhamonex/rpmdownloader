@@ -19,17 +19,12 @@
  ***************************************************************************/
 #include "abstractcontentdownloader.h"
 
-#include <QFtp>
 #include <QRegExp>
 
-#include "rdhttp.h"
-
 AbstractContentDownloader::AbstractContentDownloader ( QObject *parent )
-    : QObject ( parent ), curProfile ( -1 ), aborted ( false )
+    : QObject ( parent ), curProfile ( -1 ), aborted ( false ), m_curl( new AsyncCurlHandle( this ) )
 {
-  // initalize ftp and http objects
-  ftp = new QFtp ( this );
-  http = new RDHttp ( this );
+
 }
 
 AbstractContentDownloader::~AbstractContentDownloader()
@@ -38,17 +33,7 @@ AbstractContentDownloader::~AbstractContentDownloader()
 
 void AbstractContentDownloader::closeConnections()
 {
-  if ( ftp->state() != QFtp::Unconnected ) {
-    ftp->clearPendingCommands();
-    ftp->close();
-    // ftp->abort();
-  }
-
-  if ( http->state() != QHttp::Unconnected ) {
-    http->clearPendingRequests();
-    http->closeConnection();
-    // http->abort();
-  }
+  aborted = true;
 }
 
 // void AbstractContentDownloader::setCacheDir(const QDir & newCacheDir)

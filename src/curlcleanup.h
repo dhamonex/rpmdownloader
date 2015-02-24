@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2008 by Dirk Hartmann                                   *
+ *   Copyright (C) 2015 by Dirk Hartmann                                   *
  *   2monex@gmx.net                                                        *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -17,42 +17,23 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef REPOSITORYCONTENTDOWNLOADER_H
-#define REPOSITORYCONTENTDOWNLOADER_H
+#ifndef CURLCLEANUP_H
+#define CURLCLEANUP_H
 
-#include "abstractcontentdownloader.h"
-#include "rddatabaseinserter.h"
+#include <curl/curl.h>
 
-class PlainRepositoryContentDownloader : public AbstractContentDownloader
+#include <memory>
+
+struct CurlCleanup
 {
-    Q_OBJECT
-  public:
-    PlainRepositoryContentDownloader ( QObject *parent = 0 );
-
-    void startContentUpdate ( int profileNumber, const QString &databasePath, const QString &repoName, const QString &serverUrl, const QStringList &architectures );
-
-    void cancelContentUpdate();
-
-    ~PlainRepositoryContentDownloader();
-
-  protected:
-    void abortContentUpdate ( const bool userCancelled = false );
-
-  private slots:
-//     void newFtpContentsLine ( const QUrlInfo &i );
-//     void downloadFinished( bool error );
-//     void ftpFinished ( bool error );
-//     void httpFinished ( bool error );
-
-  private:
-    void updateNextArch();
-//     void startFtpListCommand ( const QUrl &url );
-//     void startHttpIndexCommand ( const QUrl &url );
-    bool initDb();
-
-    RDDatabaseInserter dbHandler;
-    QStringList updatedArchs;
-    bool isActive;
+  void operator()( CURL *curl )
+  {
+    if ( curl ) {
+      curl_easy_cleanup( curl );
+    }
+  }
 };
 
-#endif
+typedef std::unique_ptr<CURL, CurlCleanup> CurlPtr;
+
+#endif // CURLCLEANUP_H

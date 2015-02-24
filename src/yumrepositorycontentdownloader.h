@@ -30,66 +30,69 @@ class YumCacheBuilder;
 
 class YumRepositoryContentDownloader : public AbstractContentDownloader
 {
-		Q_OBJECT
-	public:
-		YumRepositoryContentDownloader(QObject *parent = 0);
-		
-		void startContentUpdate(int profileNumber, const QString &databasePath, const QString &repoName, const QString &serverUrl, const QStringList &architectures);
-		void cancelContentUpdate();
+    Q_OBJECT
+  public:
+    YumRepositoryContentDownloader(QObject *parent = 0);
+    
+    void startContentUpdate(int profileNumber, const QString &databasePath, const QString &repoName, const QString &serverUrl, const QStringList &architectures);
+    void cancelContentUpdate();
 
-		~YumRepositoryContentDownloader();
-	
-	protected:
-		void abortContentUpdate(const bool userCancelled = false);
-	
-	private slots:
-		void ftpDownloadFinished(bool error);
-		void httpDownloadFinished(bool error);
-		
-		void checkSumFinished(bool ok);
-		void checkSumError(QString error);
-		
-		void cacheBuildFinished(bool success);
-	
-	private:
-		void buildCache();
-		bool createDirsIfNeeded();
-		void fetchRepoMd();
-		bool refreshRepo();
-		void checksumCheck(); // using sha command for check and waiting for signals because of blocking
-		void fetchOthers(); // downloads the other necessary repo files
-		void readContent(); // reads the content from the database and emits the gotContent signal
-		
-		
-		QString getTemporaryRepomdFullPath() const;
-		QString getRepomdFullPath() const;
-		
-		void processNextState();
-		bool repoUpToDate(bool checkDatabase = false);
-		
-		void downloadFile(const QUrl &url, const QString &destination);
-		void downloadFiles(); // downloads all files specifed in filesToDownload map
-		
-		void removeRepoFiles(); // removes repomd and primary
-		
-		enum RefreshStates {REPOMDDOWNLOAD, POSTCHECKSUMCHECK, DOWNLOADOTHERS,
-			PRECHECKSUMCHECK,  BUILDCACHE, FINISHED};
-		
-		RefreshStates state;
-		
-		QFile currentFile; // the current opened file for the download
-		
-		// informations from the repomd parser
-		QMap<QString, FileMetaInfo> repomdMetaInfos;
-		
-		QMap<QUrl, QString> filesToDownload; // server path, destination
-		
-		// for checksum check
-		CheckSumCheck *checkSumChecker;
-		
-		// for building the cache
-		YumCacheBuilder *cacheBuilder;
+    ~YumRepositoryContentDownloader();
+      
+    protected:
+    void abortContentUpdate(const bool userCancelled = false);
+  
+  private slots:
+    void downloadFinished();
+    
+    void checkSumFinished(bool ok);
+    void checkSumError(QString error);
+    
+    void cacheBuildFinished(bool success);
+  
+  private:
+    friend size_t yumContentDownloaderCallback( char *ptr, size_t size, size_t nmemb, void *userdata );
+    
+    void buildCache();
+    bool createDirsIfNeeded();
+    void fetchRepoMd();
+    bool refreshRepo();
+    void checksumCheck(); // using sha command for check and waiting for signals because of blocking
+    void fetchOthers(); // downloads the other necessary repo files
+    void readContent(); // reads the content from the database and emits the gotContent signal
+    
+    
+    QString getTemporaryRepomdFullPath() const;
+    QString getRepomdFullPath() const;
+    
+    void processNextState();
+    bool repoUpToDate(bool checkDatabase = false);
+    
+    void downloadFile(const QUrl &url, const QString &destination);
+    void downloadFiles(); // downloads all files specifed in filesToDownload map
+    
+    void removeRepoFiles(); // removes repomd and primary
+    
+    enum RefreshStates {REPOMDDOWNLOAD, POSTCHECKSUMCHECK, DOWNLOADOTHERS,
+      PRECHECKSUMCHECK,  BUILDCACHE, FINISHED};
+    
+    RefreshStates state;
+    
+    QFile currentFile; // the current opened file for the download
+    
+    // informations from the repomd parser
+    QMap<QString, FileMetaInfo> repomdMetaInfos;
+    
+    QMap<QUrl, QString> filesToDownload; // server path, destination
+    
+    // for checksum check
+    CheckSumCheck *checkSumChecker;
+    
+    // for building the cache
+    YumCacheBuilder *cacheBuilder;
 
 };
 
 #endif
+
+

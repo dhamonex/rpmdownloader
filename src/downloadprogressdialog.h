@@ -27,10 +27,6 @@
 #include "repositoryprofile.h"
 #include "rpm.h"
 
-class RDHttp;
-
-class QFtp;
-
 class CheckSumCheck;
 
 // This class downloads all rpms and displays a nice progress bar
@@ -77,8 +73,8 @@ class DownloadProgressDialog : public QDialog, private Ui::DownloadProgressDialo
     qint64 overallDownloadSize();
 
     QList<RepositoryProfile *> profiles; // profiles for dowanloading
-    QFtp *ftp;
-    RDHttp *http;
+//     QFtp *ftp;
+//     RDHttp *http;
     int numberOfRpms;
     int currentProfile; // current processed profile
     QUrl oldProfileUrl; // when following a redirect store old url here and reset it later

@@ -21,17 +21,15 @@
 
 #include "packagemetadata.h"
 #include "rpmdownloadersettings.h"
-#include "rdhttp.h"
 
-#include <QFtp>
 #include <QApplication>
 
 PlainRepositoryContentDownloader::PlainRepositoryContentDownloader ( QObject *parent )
     : AbstractContentDownloader ( parent ), isActive ( false )
 {
-  connect ( ftp, SIGNAL ( listInfo ( QUrlInfo ) ), this, SLOT ( newFtpContentsLine ( const QUrlInfo& ) ) );
-  connect ( ftp, SIGNAL ( done ( bool ) ), this, SLOT ( ftpFinished ( bool ) ) );
-  connect ( http, SIGNAL ( done ( bool ) ), this, SLOT ( httpFinished ( bool ) ) );
+//   connect ( ftp, SIGNAL ( listInfo ( QUrlInfo ) ), this, SLOT ( newFtpContentsLine ( const QUrlInfo& ) ) );
+//   connect ( ftp, SIGNAL ( done ( bool ) ), this, SLOT ( ftpFinished ( bool ) ) );
+//   connect ( http, SIGNAL ( done ( bool ) ), this, SLOT ( httpFinished ( bool ) ) );
 }
 
 
@@ -70,9 +68,9 @@ void PlainRepositoryContentDownloader::abortContentUpdate ( const bool userCance
   if ( isActive )
     dbHandler.rollback();
 
-  http->abort();
+//   http->abort();
 
-  ftp->abort();
+//   ftp->abort();
 
   isActive = false;
 
@@ -119,10 +117,10 @@ void PlainRepositoryContentDownloader::updateNextArch()
     }
 
     if ( url.scheme() == "ftp" ) { // use ftp
-      startFtpListCommand ( url );
+//       startFtpListCommand ( url );
 
     } else if ( url.scheme() == "http" ) { // use http
-      startHttpIndexCommand ( url );
+//       startHttpIndexCommand ( url );
 
     } else {
       abortContentUpdate();
@@ -133,108 +131,83 @@ void PlainRepositoryContentDownloader::updateNextArch()
   }
 }
 
-void PlainRepositoryContentDownloader::startFtpListCommand ( const QUrl & url )
-{
-  ftp->clearPendingCommands(); // clear all pending commands
+// void PlainRepositoryContentDownloader::startFtpListCommand ( const QUrl & url )
+// {
+//   ftp->clearPendingCommands(); // clear all pending commands
+// 
+//   if ( ftp->state() != QFtp::Unconnected ) { // disconnect if already connected
+//     ftp->abort();
+//     ftp->close();
+//   }
+// 
+//   ftp->connectToHost ( url.host(), url.port ( 21 ) );
+// 
+//   ftp->login();
+//   ftp->cd ( url.path() );
+//   ftp->list();
+//   ftp->close();
+// }
 
-  if ( ftp->state() != QFtp::Unconnected ) { // disconnect if already connected
-    ftp->abort();
-    ftp->close();
-  }
+// void PlainRepositoryContentDownloader::newFtpContentsLine ( const QUrlInfo & i )
+// {
+//   if ( i.isFile() ) { // only files are relevant
+//     PackageMetaData metaData ( i.name(), currentArch );
+//     metaData.setSize ( i.size() );
+// 
+//     if ( !dbHandler.insertPackage ( metaData, false ) )
+//       abortContentUpdate();
+//   }
+// }
 
-  ftp->connectToHost ( url.host(), url.port ( 21 ) );
+// void PlainRepositoryContentDownloader::ftpFinished ( bool error )
+// {
+//   if ( error && !aborted ) {
+//     errMsg = tr ( "FTP error: %1" ).arg ( ftp->errorString() );
+//     abortContentUpdate();
+//     return;
+//   }
+// 
+//   if ( !aborted )
+//     updateNextArch();
+// }
 
-  ftp->login();
-  ftp->cd ( url.path() );
-  ftp->list();
-  ftp->close();
-}
-
-void PlainRepositoryContentDownloader::newFtpContentsLine ( const QUrlInfo & i )
-{
-  if ( i.isFile() ) { // only files are relevant
-    PackageMetaData metaData ( i.name(), currentArch );
-    metaData.setSize ( i.size() );
-
-    if ( !dbHandler.insertPackage ( metaData, false ) )
-      abortContentUpdate();
-  }
-}
-
-void PlainRepositoryContentDownloader::ftpFinished ( bool error )
-{
-  if ( error && !aborted ) {
-    errMsg = tr ( "FTP error: %1" ).arg ( ftp->errorString() );
-    abortContentUpdate();
-    return;
-  }
-
-  if ( !aborted )
-    updateNextArch();
-}
-
-void PlainRepositoryContentDownloader::startHttpIndexCommand ( const QUrl & url )
-{
-  http->clearPendingRequests();
-
-  if ( http->state() != QHttp::Unconnected ) {
-    http->abort();
-    http->close();
-  }
-
-  http->setHost ( url.host(), url.port ( 80 ) );
-
-  QString path = url.path();
-
-  if ( !path.endsWith ( "/" ) ) // add trailing / if needed
-    path += "/";
-
-  QHttpRequestHeader header ( "GET", path );
-
-  header.setValue ( "Host", url.host() );
-
-  http->request ( header );
-
-  // qDebug("Request %s %s", qPrintable(url.toString()), qPrintable(header.toString()));
-}
-
-void PlainRepositoryContentDownloader::httpFinished ( bool error )
-{
-  if ( error && !aborted ) {
-    errMsg = tr ( "HTTP error %1" ).arg ( http->errorString() );
-    abortContentUpdate();
-    return;
-  }
-
-  QString contents = http->readAll();
-
-  // qDebug("contents %s", qPrintable(contents));
-  QStringList contentLines = contents.split ( "\n" );
-  qDebug ( "%i", contentLines.size() );
-
-  for ( int i = 0; i < contentLines.size(); ++i ) {
-    if ( ( i % 500 ) == 0 )
-      qApp->processEvents(); // process events
-
-    QRegExp htmlLinkRegExp ( ".*<A HREF=.*>(\\S*)</A>.*(\\d+[.|]\\d*[M|B|K])" );
-
-    htmlLinkRegExp.setCaseSensitivity ( Qt::CaseInsensitive );
-
-    if ( htmlLinkRegExp.indexIn ( contentLines.at ( i ) ) != -1 ) {
-      PackageMetaData metaData ( htmlLinkRegExp.cap ( 1 ), currentArch );
-      metaData.setSize ( htmlLinkRegExp.cap ( 2 ) );
-
-      if ( !dbHandler.insertPackage ( metaData, false ) ) {
-        abortContentUpdate();
-        return;
-      }
-
-      // qDebug("rpm %s, size %s", qPrintable(htmlLinkRegExp.cap(1)), qPrintable(htmlLinkRegExp.cap(2)));
-    }
-  }
-
-  updateNextArch();
-}
+// void PlainRepositoryContentDownloader::httpFinished ( bool error )
+// {
+//   if ( error && !aborted ) {
+//     errMsg = tr ( "HTTP error %1" ).arg ( http->errorString() );
+//     abortContentUpdate();
+//     return;
+//   }
+// 
+//   QString contents = http->readAll();
+// 
+//   // qDebug("contents %s", qPrintable(contents));
+//   QStringList contentLines = contents.split ( "\n" );
+//   qDebug ( "%i", contentLines.size() );
+// 
+//   for ( int i = 0; i < contentLines.size(); ++i ) {
+//     if ( ( i % 500 ) == 0 )
+//       qApp->processEvents(); // process events
+// 
+//     QRegExp htmlLinkRegExp ( ".*<A HREF=.*>(\\S*)</A>.*(\\d+[.|]\\d*[M|B|K])" );
+// 
+//     htmlLinkRegExp.setCaseSensitivity ( Qt::CaseInsensitive );
+// 
+//     if ( htmlLinkRegExp.indexIn ( contentLines.at ( i ) ) != -1 ) {
+//       PackageMetaData metaData ( htmlLinkRegExp.cap ( 1 ), currentArch );
+//       metaData.setSize ( htmlLinkRegExp.cap ( 2 ) );
+// 
+//       if ( !dbHandler.insertPackage ( metaData, false ) ) {
+//         abortContentUpdate();
+//         return;
+//       }
+// 
+//       // qDebug("rpm %s, size %s", qPrintable(htmlLinkRegExp.cap(1)), qPrintable(htmlLinkRegExp.cap(2)));
+//     }
+//   }
+// 
+//   updateNextArch();
+// }
 
 bool PlainRepositoryContentDownloader::initDb()
 {
