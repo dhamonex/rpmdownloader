@@ -8,3 +8,4 @@ moc_*
 qrc_*
 *.kdev4
 build
+/rpmdownloader
