@@ -52,7 +52,6 @@ class AbstractContentDownloader : public QObject
 
 
   protected:
-    void closeConnections();
     virtual void abortContentUpdate ( const bool userCancelled = false ) = 0; // internal abort
 
     int curProfile;

@@ -92,8 +92,6 @@ void YumRepositoryContentDownloader::abortContentUpdate( const bool userCancelle
 
   // qDebug("cancel content update %s %s", qPrintable(repoUrl), qPrintable(currentFile.fileName()));
 
-  closeConnections();
-
   if ( currentFile.exists() ) {
     currentFile.close();
     currentFile.remove();

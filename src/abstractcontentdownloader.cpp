@@ -31,11 +31,6 @@ AbstractContentDownloader::~AbstractContentDownloader()
 {
 }
 
-void AbstractContentDownloader::closeConnections()
-{
-  aborted = true;
-}
-
 // void AbstractContentDownloader::setCacheDir(const QDir & newCacheDir)
 // {
 // 	cacheDir = newCacheDir;

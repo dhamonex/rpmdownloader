@@ -24,6 +24,21 @@
 
 #include <QApplication>
 
+size_t PlainRepositoryContentDownloader::plainContentCallback( char *ptr, size_t size, size_t nmemb, void *userdata )
+{
+  PlainRepositoryContentDownloader *plainContentUpdate = reinterpret_cast<PlainRepositoryContentDownloader *>( userdata );
+  
+  if ( plainContentUpdate->aborted ) {
+    return CURLE_WRITE_ERROR;
+  }
+  size_t realsize = size * nmemb;
+  
+  
+  
+  return realsize;
+}
+
+
 PlainRepositoryContentDownloader::PlainRepositoryContentDownloader ( QObject *parent )
     : AbstractContentDownloader ( parent ), isActive ( false )
 {
@@ -60,10 +75,9 @@ void PlainRepositoryContentDownloader::startContentUpdate ( int profileNumber, c
   updateNextArch();
 }
 
-void PlainRepositoryContentDownloader::abortContentUpdate ( const bool userCancelled )
+void PlainRepositoryContentDownloader::abortContentUpdate( const bool userCancelled )
 {
   aborted = true;
-  closeConnections();
 
   if ( isActive )
     dbHandler.rollback();
@@ -128,6 +142,13 @@ void PlainRepositoryContentDownloader::updateNextArch()
                     "Please select ftp or http" ).arg ( url.scheme() );
       return;
     }
+  }
+}
+
+void PlainRepositoryContentDownloader::downloadFinished()
+{
+  if ( aborted ) {
+    return;
   }
 }
 
