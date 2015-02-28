@@ -39,20 +39,23 @@ class PlainRepositoryContentDownloader : public AbstractContentDownloader
     void abortContentUpdate ( const bool userCancelled = false );
 
   private slots:
-//     void newFtpContentsLine ( const QUrlInfo &i );
-//     void downloadFinished( bool error );
-//     void ftpFinished ( bool error );
-//     void httpFinished ( bool error );
+    void downloadFinished();
 
   private:
+    static size_t plainContentCallback( char *ptr, size_t size, size_t nmemb, void *userdata );
+    
     void updateNextArch();
 //     void startFtpListCommand ( const QUrl &url );
 //     void startHttpIndexCommand ( const QUrl &url );
+    void parseContents();
     bool initDb();
 
     RDDatabaseInserter dbHandler;
     QStringList updatedArchs;
     bool isActive;
+    
+    QUrl m_currentUrl;
+    QByteArray m_contents;
 };
 
 #endif
