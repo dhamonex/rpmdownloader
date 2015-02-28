@@ -51,7 +51,7 @@ class YumRepositoryContentDownloader : public AbstractContentDownloader
     void cacheBuildFinished(bool success);
   
   private:
-    friend size_t yumContentDownloaderCallback( char *ptr, size_t size, size_t nmemb, void *userdata );
+    static size_t yumContentDownloaderCallback( char *ptr, size_t size, size_t nmemb, void *userdata );
     
     void buildCache();
     bool createDirsIfNeeded();

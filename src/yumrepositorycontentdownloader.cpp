@@ -27,7 +27,7 @@
 
 #include <QUrl>
 
-size_t yumContentDownloaderCallback( char *ptr, size_t size, size_t nmemb, void *userdata )
+size_t YumRepositoryContentDownloader::yumContentDownloaderCallback( char *ptr, size_t size, size_t nmemb, void *userdata )
 {
   YumRepositoryContentDownloader *downloader = reinterpret_cast<YumRepositoryContentDownloader *>( userdata );
   
