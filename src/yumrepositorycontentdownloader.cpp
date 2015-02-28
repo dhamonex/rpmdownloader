@@ -48,8 +48,6 @@ YumRepositoryContentDownloader::YumRepositoryContentDownloader( QObject *parent 
   cacheBuilder = new YumCacheBuilder( this );
 
   connect( m_curl, SIGNAL( finished() ), this, SLOT( downloadFinished() ) );
-//   connect ( ftp, SIGNAL ( done ( bool ) ), this, SLOT ( ftpDownloadFinished ( bool ) ) );
-//   connect ( http, SIGNAL ( downloadWithRedirectToFileFinished ( bool ) ), this, SLOT ( httpDownloadFinished ( bool ) ) );
 
   connect( checkSumChecker, SIGNAL( checkFinished( bool ) ), this, SLOT( checkSumFinished( bool ) ) );
   connect( checkSumChecker, SIGNAL( checkFailed( QString ) ), this, SLOT( checkSumError( QString ) ) );
