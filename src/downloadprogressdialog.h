@@ -26,6 +26,7 @@
 #include "ui_downloadprogressdialog.h"
 #include "repositoryprofile.h"
 #include "rpm.h"
+#include "asynccurlhandle.h"
 
 class CheckSumCheck;
 
@@ -55,10 +56,8 @@ class DownloadProgressDialog : public QDialog, private Ui::DownloadProgressDialo
 
   private slots:
     void abortDownloads();
-    void ftpFinished ( bool error );
-    void httpFinished ( bool error );
-    void updateTransferProgress ( qint64 done, qint64 total );
-    void httpTransferData ( int done, int total ); // wrapper for updateTranserProgress with http
+    void downloadFinished();
+        
     void startDownload(); // delete old version if update is available?
 
     // checksum check
@@ -66,15 +65,17 @@ class DownloadProgressDialog : public QDialog, private Ui::DownloadProgressDialo
     void checkSumError ( QString error );
 
   private:
+    static int curlProgressCallback( void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow );
+    static int curlDownloadCallback( char *ptr, size_t size, size_t nmemb, void *userdata );
+    
     void downloadNextProfile();
     void downloadNextRpm();
     void downloadNext();
     void downloadCurrentPackage();
     qint64 overallDownloadSize();
 
-    QList<RepositoryProfile *> profiles; // profiles for dowanloading
-//     QFtp *ftp;
-//     RDHttp *http;
+    QList<RepositoryProfile *> profiles; // profiles for downloading
+
     int numberOfRpms;
     int currentProfile; // current processed profile
     QUrl oldProfileUrl; // when following a redirect store old url here and reset it later
@@ -84,6 +85,8 @@ class DownloadProgressDialog : public QDialog, private Ui::DownloadProgressDialo
     bool nothingTodo;
     bool redirected;
     bool haveOverallDownloadSize;
+    
+    bool  m_aborted;
 
     QList<PackageMetaData> packageMetaDatasOfCurrentProfile;
     QString currentArch;
@@ -92,6 +95,9 @@ class DownloadProgressDialog : public QDialog, private Ui::DownloadProgressDialo
     QFile currentFile; // the current opened file for the download
     QString errorMsg; // error message for the download
     CheckSumCheck *checkSumChecker;
+    
+    QUrl m_currentUrl;
+    AsyncCurlHandle *m_curl;
 
 };
 

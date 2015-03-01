@@ -45,8 +45,6 @@ class AbstractContentDownloader : public QObject
 
     QString readError() const {return errMsg;}
 
-    // inline bool errorOccured() const {if (errMsg.size() > 0) return true; return false;}
-
   signals:
     void finished ( int, bool ); // finished successful or not
 
