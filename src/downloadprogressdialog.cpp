@@ -66,8 +66,6 @@ DownloadProgressDialog::DownloadProgressDialog ( QWidget* parent, Qt::WFlags fl 
 {
   setupUi ( this );
 
-//   ftp = new QFtp ( this );
-//   http = new RDHttp ( this );
   checkSumChecker = new CheckSumCheck ( this );
   layout()->setSizeConstraint ( QLayout::SetFixedSize );
 
