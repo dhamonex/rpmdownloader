@@ -21,17 +21,28 @@
 
 #include "packagemetadata.h"
 #include "rpmdownloadersettings.h"
-#include "rdhttp.h"
 
-#include <QFtp>
 #include <QApplication>
 
-PlainRepositoryContentDownloader::PlainRepositoryContentDownloader ( QObject *parent )
-    : AbstractContentDownloader ( parent ), isActive ( false )
+size_t PlainRepositoryContentDownloader::plainContentCallback( char *ptr, size_t size, size_t nmemb, void *userdata )
 {
-  connect ( ftp, SIGNAL ( listInfo ( QUrlInfo ) ), this, SLOT ( newFtpContentsLine ( const QUrlInfo& ) ) );
-  connect ( ftp, SIGNAL ( done ( bool ) ), this, SLOT ( ftpFinished ( bool ) ) );
-  connect ( http, SIGNAL ( done ( bool ) ), this, SLOT ( httpFinished ( bool ) ) );
+  PlainRepositoryContentDownloader *plainContentUpdate = reinterpret_cast<PlainRepositoryContentDownloader *>( userdata );
+  
+  if ( plainContentUpdate->aborted ) {
+    return CURLE_WRITE_ERROR;
+  }
+  size_t realsize = size * nmemb;
+  
+  plainContentUpdate->m_contents.append( ptr, realsize );
+  
+  return realsize;
+}
+
+
+PlainRepositoryContentDownloader::PlainRepositoryContentDownloader ( QObject *parent )
+    : AbstractContentDownloader ( parent ), dbHandler(), updatedArchs(), isActive( false ), m_contents()
+{
+    connect( m_curl, SIGNAL( finished() ) , this, SLOT( downloadFinished() ) );
 }
 
 
@@ -62,22 +73,19 @@ void PlainRepositoryContentDownloader::startContentUpdate ( int profileNumber, c
   updateNextArch();
 }
 
-void PlainRepositoryContentDownloader::abortContentUpdate ( const bool userCancelled )
+void PlainRepositoryContentDownloader::abortContentUpdate( const bool userCancelled )
 {
   aborted = true;
-  closeConnections();
 
-  if ( isActive )
+  if ( isActive ) {
     dbHandler.rollback();
-
-  http->abort();
-
-  ftp->abort();
+  }
 
   isActive = false;
 
-  if ( !userCancelled )
+  if ( !userCancelled ) {
     emit ( finished ( curProfile, true ) );
+  }
 }
 
 void PlainRepositoryContentDownloader::cancelContentUpdate()
@@ -90,6 +98,7 @@ void PlainRepositoryContentDownloader::cancelContentUpdate()
 void PlainRepositoryContentDownloader::updateNextArch()
 {
   bool allUpdated = true;
+  m_contents.clear();
 
   foreach ( const QString &arch , archs ) {
     if ( !updatedArchs.contains ( arch ) ) {
@@ -110,130 +119,87 @@ void PlainRepositoryContentDownloader::updateNextArch()
     emit ( finished ( curProfile, false ) );
 
   } else {
-    QUrl url ( repoUrl + "/" + currentArch );
+    m_currentUrl = repoUrl + "/" + currentArch + "/";
 
-    if ( !url.isValid() ) { // got an error abort all
+    if ( !m_currentUrl.isValid() ) { // got an error abort all
       abortContentUpdate();
-      errMsg = tr ( "Invalid url: %1" ).arg ( url.toString() );
+      errMsg = tr ( "Invalid url: %1" ).arg ( m_currentUrl.toString() );
       return;
     }
 
-    if ( url.scheme() == "ftp" ) { // use ftp
-      startFtpListCommand ( url );
-
-    } else if ( url.scheme() == "http" ) { // use http
-      startHttpIndexCommand ( url );
-
-    } else {
+    if ( m_curl->isRunning() ) {
+      qFatal( "There is already a pending request running" );
       abortContentUpdate();
-      errMsg = tr ( "url scheme %1 not supported"
-                    "Please select ftp or http" ).arg ( url.scheme() );
       return;
     }
+    
+    curl_easy_setopt( m_curl->get(), CURLOPT_FOLLOWLOCATION, 1L );
+    curl_easy_setopt( m_curl->get(), CURLOPT_WRITEFUNCTION, &plainContentCallback );
+    curl_easy_setopt( m_curl->get(), CURLOPT_WRITEDATA, this );
+  
+    curl_easy_setopt( m_curl->get(), CURLOPT_URL, m_currentUrl.toString().toAscii().data() );
+  
+    m_curl->perform();
+    
   }
 }
 
-void PlainRepositoryContentDownloader::startFtpListCommand ( const QUrl & url )
-{
-  ftp->clearPendingCommands(); // clear all pending commands
-
-  if ( ftp->state() != QFtp::Unconnected ) { // disconnect if already connected
-    ftp->abort();
-    ftp->close();
-  }
-
-  ftp->connectToHost ( url.host(), url.port ( 21 ) );
-
-  ftp->login();
-  ftp->cd ( url.path() );
-  ftp->list();
-  ftp->close();
-}
-
-void PlainRepositoryContentDownloader::newFtpContentsLine ( const QUrlInfo & i )
-{
-  if ( i.isFile() ) { // only files are relevant
-    PackageMetaData metaData ( i.name(), currentArch );
-    metaData.setSize ( i.size() );
-
-    if ( !dbHandler.insertPackage ( metaData, false ) )
+void PlainRepositoryContentDownloader::downloadFinished()
+{ 
+  if ( m_curl->result() != CURLE_OK ) {
+    if ( !aborted ) {
+      errMsg = tr ( "Error on content plain content update %1 url: %2)" ).arg( curl_easy_strerror( m_curl->result() ) ).arg( m_currentUrl.toString() );
       abortContentUpdate();
-  }
-}
+    }
 
-void PlainRepositoryContentDownloader::ftpFinished ( bool error )
-{
-  if ( error && !aborted ) {
-    errMsg = tr ( "FTP error: %1" ).arg ( ftp->errorString() );
-    abortContentUpdate();
     return;
   }
-
-  if ( !aborted )
-    updateNextArch();
+  
+  parseContents();
+  updateNextArch();
 }
 
-void PlainRepositoryContentDownloader::startHttpIndexCommand ( const QUrl & url )
+void PlainRepositoryContentDownloader::parseContents()
 {
-  http->clearPendingRequests();
-
-  if ( http->state() != QHttp::Unconnected ) {
-    http->abort();
-    http->close();
-  }
-
-  http->setHost ( url.host(), url.port ( 80 ) );
-
-  QString path = url.path();
-
-  if ( !path.endsWith ( "/" ) ) // add trailing / if needed
-    path += "/";
-
-  QHttpRequestHeader header ( "GET", path );
-
-  header.setValue ( "Host", url.host() );
-
-  http->request ( header );
-
-  // qDebug("Request %s %s", qPrintable(url.toString()), qPrintable(header.toString()));
-}
-
-void PlainRepositoryContentDownloader::httpFinished ( bool error )
-{
-  if ( error && !aborted ) {
-    errMsg = tr ( "HTTP error %1" ).arg ( http->errorString() );
-    abortContentUpdate();
-    return;
-  }
-
-  QString contents = http->readAll();
-
-  // qDebug("contents %s", qPrintable(contents));
-  QStringList contentLines = contents.split ( "\n" );
+//   qDebug("contents %s", qPrintable(m_contents));
+  
+  QStringList contentLines = QString( m_contents ).split( "\n" );
   qDebug ( "%i", contentLines.size() );
 
   for ( int i = 0; i < contentLines.size(); ++i ) {
-    if ( ( i % 500 ) == 0 )
+    if ( ( i % 500 ) == 0 ) {
       qApp->processEvents(); // process events
-
-    QRegExp htmlLinkRegExp ( ".*<A HREF=.*>(\\S*)</A>.*(\\d+[.|]\\d*[M|B|K])" );
-
-    htmlLinkRegExp.setCaseSensitivity ( Qt::CaseInsensitive );
-
-    if ( htmlLinkRegExp.indexIn ( contentLines.at ( i ) ) != -1 ) {
-      PackageMetaData metaData ( htmlLinkRegExp.cap ( 1 ), currentArch );
-      metaData.setSize ( htmlLinkRegExp.cap ( 2 ) );
-
-      if ( !dbHandler.insertPackage ( metaData, false ) ) {
-        abortContentUpdate();
-        return;
-      }
-
-      // qDebug("rpm %s, size %s", qPrintable(htmlLinkRegExp.cap(1)), qPrintable(htmlLinkRegExp.cap(2)));
     }
-  }
+    
+    PackageMetaData metaData;
+    
+    if ( m_currentUrl.scheme() == "http" ) {
+      QRegExp htmlLinkRegExp ( ".*<A HREF=.*>(\\S*)</A>.*(\\d+[.|]\\d*[M|B|K])" );
 
-  updateNextArch();
+      htmlLinkRegExp.setCaseSensitivity ( Qt::CaseInsensitive );
+
+      if ( htmlLinkRegExp.indexIn ( contentLines.at ( i ) ) != -1 ) {
+        metaData = PackageMetaData( htmlLinkRegExp.cap ( 1 ), currentArch );
+        metaData.setSize( htmlLinkRegExp.cap ( 2 ) );
+      }
+      
+    } else {
+      enum { SizePos = 4, FileNamePos = 8 };
+      QStringList lineParts( contentLines.at( i ).split( " ", QString::SplitBehavior::SkipEmptyParts ) );
+      
+      if ( lineParts.size() < 8 ) {
+        continue;
+      }
+      
+      metaData = PackageMetaData( lineParts.at( FileNamePos ), currentArch, lineParts.at( SizePos ).toUInt() );
+    }
+
+    if ( !dbHandler.insertPackage ( metaData, false ) ) {
+      abortContentUpdate();
+      return;
+    }
+
+  }
 }
 
 bool PlainRepositoryContentDownloader::initDb()

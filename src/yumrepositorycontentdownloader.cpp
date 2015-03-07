@@ -24,31 +24,42 @@
 #include "yumfileconstants.h"
 #include "repositorysqlitecontentlister.h"
 #include "rpmdownloadersettings.h"
-#include "rdhttp.h"
 
-#include <QFtp>
 #include <QUrl>
 
-YumRepositoryContentDownloader::YumRepositoryContentDownloader ( QObject *parent )
-    : AbstractContentDownloader ( parent ), state ( FINISHED )
+size_t YumRepositoryContentDownloader::yumContentDownloaderCallback( char *ptr, size_t size, size_t nmemb, void *userdata )
 {
-  checkSumChecker = new CheckSumCheck ( this );
-  cacheBuilder = new YumCacheBuilder ( this );
+  YumRepositoryContentDownloader *downloader = reinterpret_cast<YumRepositoryContentDownloader *>( userdata );
+  
+  if ( downloader->aborted ) {
+    return CURLE_WRITE_ERROR;
+  }
+  size_t realsize = size * nmemb;
+  
+  downloader->currentFile.write( ptr, realsize );
+  
+  return realsize;
+}
 
-  connect ( ftp, SIGNAL ( done ( bool ) ), this, SLOT ( ftpDownloadFinished ( bool ) ) );
-  connect ( http, SIGNAL ( downloadWithRedirectToFileFinished ( bool ) ), this, SLOT ( httpDownloadFinished ( bool ) ) );
+YumRepositoryContentDownloader::YumRepositoryContentDownloader( QObject *parent )
+  : AbstractContentDownloader( parent ), state( FINISHED )
+{
+  checkSumChecker = new CheckSumCheck( this );
+  cacheBuilder = new YumCacheBuilder( this );
 
-  connect ( checkSumChecker, SIGNAL ( checkFinished ( bool ) ), this, SLOT ( checkSumFinished ( bool ) ) );
-  connect ( checkSumChecker, SIGNAL ( checkFailed ( QString ) ), this, SLOT ( checkSumError ( QString ) ) );
+  connect( m_curl, SIGNAL( finished() ), this, SLOT( downloadFinished() ) );
 
-  connect ( cacheBuilder, SIGNAL ( buildFinished ( bool ) ), this, SLOT ( cacheBuildFinished ( bool ) ) );
+  connect( checkSumChecker, SIGNAL( checkFinished( bool ) ), this, SLOT( checkSumFinished( bool ) ) );
+  connect( checkSumChecker, SIGNAL( checkFailed( QString ) ), this, SLOT( checkSumError( QString ) ) );
+
+  connect( cacheBuilder, SIGNAL( buildFinished( bool ) ), this, SLOT( cacheBuildFinished( bool ) ) );
 }
 
 YumRepositoryContentDownloader::~YumRepositoryContentDownloader()
 {
 }
 
-void YumRepositoryContentDownloader::startContentUpdate ( int profileNumber, const QString &databasePath, const QString &repoName, const QString &serverUrl, const QStringList &architectures )
+void YumRepositoryContentDownloader::startContentUpdate( int profileNumber, const QString &databasePath, const QString &repoName, const QString &serverUrl, const QStringList &architectures )
 {
   // qDebug("start yum content update server %s", qPrintable(serverUrl));
 
@@ -64,7 +75,7 @@ void YumRepositoryContentDownloader::startContentUpdate ( int profileNumber, con
   repomdMetaInfos.clear();
 
   if ( !createDirsIfNeeded() ) {
-    errMsg = tr ( "Could not create cache or temp Directory.\nVerify that your settings are correct and that both directories are writable for you" );
+    errMsg = tr( "Could not create cache or temp Directory.\nVerify that your settings are correct and that both directories are writable for you" );
     abortContentUpdate();
     return;
   }
@@ -72,7 +83,7 @@ void YumRepositoryContentDownloader::startContentUpdate ( int profileNumber, con
   processNextState();
 }
 
-void YumRepositoryContentDownloader::abortContentUpdate ( const bool userCancelled )
+void YumRepositoryContentDownloader::abortContentUpdate( const bool userCancelled )
 {
   if ( aborted )
     return;
@@ -81,16 +92,14 @@ void YumRepositoryContentDownloader::abortContentUpdate ( const bool userCancell
 
   // qDebug("cancel content update %s %s", qPrintable(repoUrl), qPrintable(currentFile.fileName()));
 
-  closeConnections();
-
   if ( currentFile.exists() ) {
     currentFile.close();
     currentFile.remove();
   }
 
-  ftp->abort();
-
-  http->abort();
+//   /*/*/*ftp->abort();
+//
+//   http->abort();*/*/*/
 
   if ( state == BUILDCACHE )
     cacheBuilder->terminate();
@@ -100,12 +109,12 @@ void YumRepositoryContentDownloader::abortContentUpdate ( const bool userCancell
   state = FINISHED;
 
   if ( !userCancelled )
-    emit ( finished ( curProfile, true ) );
+    emit( finished( curProfile, true ) );
 }
 
 void YumRepositoryContentDownloader::cancelContentUpdate()
 {
-  abortContentUpdate ( true );
+  abortContentUpdate( true );
 
   // emit(finished(curProfile, false));
 }
@@ -119,96 +128,85 @@ void YumRepositoryContentDownloader::processNextState()
     state = REPOMDDOWNLOAD;
     fetchRepoMd();
 
-  } else if ( state == REPOMDDOWNLOAD ) {
-    if ( !repoUpToDate ( true ) ) { // with database checking
-      if ( aborted ) // check aborted again becuase it could have changed in last function
-        return;
+  } else
+    if ( state == REPOMDDOWNLOAD ) {
+      if ( !repoUpToDate( true ) ) {  // with database checking
+        if ( aborted ) // check aborted again becuase it could have changed in last function
+          return;
 
-      if (!refreshRepo()) {
-        abortContentUpdate();
+        if ( !refreshRepo() ) {
+          abortContentUpdate();
+        }
+
+      } else {
+        if ( aborted )
+          return;
+
+        // repo seems to be up to date but are the files stored in cache correct?
+        // better do a checksum check
+        state = PRECHECKSUMCHECK;
+
+        checksumCheck();
       }
 
-    } else {
-      if ( aborted )
-        return;
+    } else
+      if ( state == PRECHECKSUMCHECK ) {
+        // read cached values and emit file list
+        // cache was up to date
+        readContent();
 
-      // repo seems to be up to date but are the files stored in cache correct?
-      // better do a checksum check
-      state = PRECHECKSUMCHECK;
+      } else
+        if ( state == DOWNLOADOTHERS ) {
+          // do another checksum check
+          // for the new downloaded files
 
-      checksumCheck();
-    }
+          if ( !repoUpToDate() ) { // just one more check but this time without database checking
+            if ( errMsg.isEmpty() )
+              errMsg = tr( "Unknown error: Cannot refresh repository" );
 
-  } else if ( state == PRECHECKSUMCHECK ) {
-    // read cached values and emit file list
-    // cache was up to date
-    readContent();
+            abortContentUpdate();
 
-  } else if ( state == DOWNLOADOTHERS ) {
-    // do another checksum check
-    // for the new downloaded files
+            return;
+          }
 
-    if ( !repoUpToDate() ) { // just one more check but this time without database checking
-      if ( errMsg.isEmpty() )
-        errMsg = tr ( "Unknown error: Cannot refresh repository" );
+          state = POSTCHECKSUMCHECK;
 
-      abortContentUpdate();
+          checksumCheck();
 
-      return;
-    }
+        } else
+          if ( state == POSTCHECKSUMCHECK ) {
+            // now build cache
+            buildCache();
 
-    state = POSTCHECKSUMCHECK;
-
-    checksumCheck();
-
-  } else if ( state == POSTCHECKSUMCHECK ) {
-    // now build cache
-    buildCache();
-
-  } else if ( state == BUILDCACHE ) {
-    readContent();
-  }
+          } else
+            if ( state == BUILDCACHE ) {
+              readContent();
+            }
 }
 
 bool YumRepositoryContentDownloader::createDirsIfNeeded()
 {
   if ( !rpmDownloaderSettings().cacheDir().exists() ) { // try create one
-    if ( !rpmDownloaderSettings().cacheDir().mkpath ( rpmDownloaderSettings().cacheDir().absolutePath() ) )
+    if ( !rpmDownloaderSettings().cacheDir().mkpath( rpmDownloaderSettings().cacheDir().absolutePath() ) )
       return false;
   }
 
   if ( !rpmDownloaderSettings().tempDir().exists() ) { // create tmp dir
-    if ( !rpmDownloaderSettings().tempDir().mkpath ( rpmDownloaderSettings().tempDir().absolutePath() ) )
+    if ( !rpmDownloaderSettings().tempDir().mkpath( rpmDownloaderSettings().tempDir().absolutePath() ) )
       return false;
   }
 
   return true;
 }
 
-void YumRepositoryContentDownloader::ftpDownloadFinished ( bool error )
+void YumRepositoryContentDownloader::downloadFinished()
 {
   currentFile.close();
-  currentFile.setFileName ( "" );
+  currentFile.setFileName( "" );
 
-  if ( error ) {
+  if ( m_curl->result() != CURLE_OK ) {
     if ( !aborted ) {
-      errMsg = tr ( "FTP Error %1" ).arg ( ftp->errorString() );
-      abortContentUpdate();
-    }
-
-    return;
-  }
-
-  downloadFiles();
-}
-
-void YumRepositoryContentDownloader::httpDownloadFinished ( bool error )
-{
-  currentFile.close();
-
-  if ( error ) {
-    if ( !aborted ) {
-      errMsg = tr ( "HTTP Error %1" ).arg ( http->errorString() );
+      errMsg = tr ( "Error on transfer %1" ).arg( curl_easy_strerror( m_curl->result() ) );
       abortContentUpdate();
     }
 
@@ -225,81 +223,66 @@ void YumRepositoryContentDownloader::downloadFiles()
     return;
   }
 
-  QUrl nextUrl ( filesToDownload.keys().at ( 0 ) );
+  QUrl nextUrl( filesToDownload.keys().at( 0 ) );
 
-  QString destination ( filesToDownload.take ( nextUrl ) );
+  QString destination( filesToDownload.take( nextUrl ) );
 
-  downloadFile ( nextUrl, destination );
+  downloadFile( nextUrl, destination );
 }
 
-void YumRepositoryContentDownloader::downloadFile ( const QUrl & url, const QString & destination )
+void YumRepositoryContentDownloader::downloadFile( const QUrl &url, const QString &destination )
 {
-  currentFile.close();
-  currentFile.setFileName ( destination );
+  if ( m_curl->isRunning() ) {
+    qFatal( "There is already a pending request running" );
+    abortContentUpdate();
+    return;
+  }
 
-  if ( !currentFile.open ( QIODevice::WriteOnly ) ) {
-    errMsg = tr ( "Cannot Open File %1 for writing: %2" ).arg ( currentFile.fileName() ).arg ( currentFile.errorString() );
+  currentFile.close();
+  currentFile.setFileName( destination );
+
+  if ( !currentFile.open( QIODevice::WriteOnly ) ) {
+    errMsg = tr( "Cannot Open File %1 for writing: %2" ).arg( currentFile.fileName() ).arg( currentFile.errorString() );
 
     abortContentUpdate();
 
     return;
   }
 
-  if ( url.scheme() == "ftp" ) {
-    ftp->clearPendingCommands(); // clear all pending commands
-
-    if ( ftp->state() != QFtp::Unconnected ) { // disconnect if already connected
-      ftp->abort();
-      ftp->close();
-    }
-
-    ftp->connectToHost ( url.host(), url.port ( 21 ) );
-
-    ftp->login();
-
-    ftp->get ( url.path(), &currentFile );
-    ftp->close();
-
-  } else {
-    // http->clearPendingRequests();
-    if ( http->state() != QHttp::Unconnected ) {
-      http->abort();
-      http->closeConnection();
-    }
-
-    http->setHost ( url.host(), url.port ( 80 ) );
-
-    QHttpRequestHeader header ( "GET", url.path() );
-    header.setValue ( "Host", url.host() );
-    http->downloadWithRedirectToFile ( header, &currentFile );
-  }
+  curl_easy_setopt( m_curl->get(), CURLOPT_FOLLOWLOCATION, 1L );
+  curl_easy_setopt( m_curl->get(), CURLOPT_WRITEFUNCTION, &yumContentDownloaderCallback );
+  curl_easy_setopt( m_curl->get(), CURLOPT_WRITEDATA, this );
+  
+  curl_easy_setopt( m_curl->get(), CURLOPT_URL, url.toString().toAscii().data() );
+  
+  m_curl->perform();
 }
 
 void YumRepositoryContentDownloader::fetchRepoMd()
 {
-  QUrl url ( repoUrl + "/" + Yum::repoServerDir + "/" + Yum::repomdFileName );
+  QUrl url( repoUrl + "/" + Yum::repoServerDir + "/" + Yum::repomdFileName );
 
   if ( !url.isValid() ) {
-    errMsg = tr ( "Invalid URL %1" ).arg ( url.toString() );
+    errMsg = tr( "Invalid URL %1" ).arg( url.toString() );
     abortContentUpdate();
     return;
   }
 
   // the destination is /tempdir/reponame.xml
-  filesToDownload.insert ( url, getTemporaryRepomdFullPath() );
+  filesToDownload.insert( url, getTemporaryRepomdFullPath() );
 
   downloadFiles();
 }
 
-bool YumRepositoryContentDownloader::repoUpToDate ( bool checkDatabase )
+bool YumRepositoryContentDownloader::repoUpToDate( bool checkDatabase )
 {
   YumRepomdDomParser repomdParser;
 
-  if ( !repomdParser.parseRepomd ( getRepomdFullPath() ) ) {
-    qDebug ( "failed to parse %s, thats nothing to worry about it will be downloaded again", qPrintable ( getRepomdFullPath() ) );
+  if ( !repomdParser.parseRepomd( getRepomdFullPath() ) ) {
+    qDebug( "failed to parse %s, thats nothing to worry about it will be downloaded again", qPrintable( getRepomdFullPath() ) );
     // repo is not up to date because parsing failed for some reasons
     // repomd doesn't exist for example.
-    errMsg = tr ( "invalid repomd file or repomd was not found on server" );
+    errMsg = tr( "invalid repomd file or repomd was not found on server" );
     return false;
   }
 
@@ -309,11 +292,11 @@ bool YumRepositoryContentDownloader::repoUpToDate ( bool checkDatabase )
   repomdMetaInfos = repomdParser.getParsedMetaInfos();
 
   // parse the actual downloaded repomd file
-  repomdParser.parseRepomd ( getTemporaryRepomdFullPath() );
+  repomdParser.parseRepomd( getTemporaryRepomdFullPath() );
 
   QMap<QString, FileMetaInfo> tmpRepomdMetaInfos = repomdParser.getParsedMetaInfos();
 
-  if ( tmpRepomdMetaInfos.value ( "primary" ).timestamp != repomdMetaInfos.value ( "primary" ).timestamp ) {
+  if ( tmpRepomdMetaInfos.value( "primary" ).timestamp != repomdMetaInfos.value( "primary" ).timestamp ) {
     // at least one timestamp has changed assume that newer is available
     return false;
   }
@@ -321,7 +304,7 @@ bool YumRepositoryContentDownloader::repoUpToDate ( bool checkDatabase )
   // try to read database contents
   RepositorySqliteContentLister lister;
 
-  lister.fetchContent ( dbPath, repoName, archs );
+  lister.fetchContent( dbPath, repoName, archs );
 
   if ( checkDatabase && lister.dbWasRecreated() ) {
     // database was corrupted and recreated need to fetch contents again
@@ -339,37 +322,38 @@ bool YumRepositoryContentDownloader::refreshRepo()
   // first remove old files
   removeRepoFiles();
 
-  QFile file ( getTemporaryRepomdFullPath() );
+  QFile file( getTemporaryRepomdFullPath() );
 
-  if ( !file.exists() || !file.copy ( getRepomdFullPath() ) ) {
-    errMsg = tr ( "Could not copy repomd file to cache dir %1. Make sure that the cache directory is writable" ).arg ( rpmDownloaderSettings().cacheDir().absolutePath() );
+  if ( !file.exists() || !file.copy( getRepomdFullPath() ) ) {
+    errMsg = tr( "Could not copy repomd file to cache dir %1. Make sure that the cache directory is writable" ).arg( rpmDownloaderSettings().cacheDir().absolutePath() );
     return false;
   }
-  
+
   YumRepomdDomParser repomdParser;
-  if ( !repomdParser.parseRepomd ( getRepomdFullPath() ) ) {
-    errMsg = tr ( "Curious Error, could not parse %1" ).arg( getRepomdFullPath() );
+
+  if ( !repomdParser.parseRepomd( getRepomdFullPath() ) ) {
+    errMsg = tr( "Curious Error, could not parse %1" ).arg( getRepomdFullPath() );
     return false;
   }
-  
-  repomdMetaInfos = repomdParser.getParsedMetaInfos();
-  
 
-  filesToDownload.insert ( QUrl ( repoUrl + "/" + repomdMetaInfos.value( "primary" ).location ), QString ( rpmDownloaderSettings().cacheDir().absolutePath() + "/" + repoName + "/" + Yum::primaryGzFileName ) );
+  repomdMetaInfos = repomdParser.getParsedMetaInfos();
+
+
+  filesToDownload.insert( QUrl( repoUrl + "/" + repomdMetaInfos.value( "primary" ).location ), QString( rpmDownloaderSettings().cacheDir().absolutePath() + "/" + repoName + "/" + Yum::primaryGzFileName ) );
 
   downloadFiles();
-  
+
   return true;
 }
 
 QString YumRepositoryContentDownloader::getTemporaryRepomdFullPath() const
 {
-  return QString ( rpmDownloaderSettings().tempDir().absolutePath() + "/" + repoName + ".xml" );
+  return QString( rpmDownloaderSettings().tempDir().absolutePath() + "/" + repoName + ".xml" );
 }
 
 QString YumRepositoryContentDownloader::getRepomdFullPath() const
 {
-  return QString ( rpmDownloaderSettings().cacheDir().absolutePath() + "/" + repoName + "/" + Yum::repomdFileName );
+  return QString( rpmDownloaderSettings().cacheDir().absolutePath() + "/" + repoName + "/" + Yum::repomdFileName );
 }
 
 void YumRepositoryContentDownloader::checksumCheck()
@@ -378,29 +362,29 @@ void YumRepositoryContentDownloader::checksumCheck()
     processNextState(); // go to next state
 
   } else {
-    if ( !repomdMetaInfos.contains ( "primary" ) ) {
+    if ( !repomdMetaInfos.contains( "primary" ) ) {
       abortContentUpdate();
       processNextState();
       return;
     }
 
-    FileMetaInfo metaInfo = repomdMetaInfos.take ( "primary" );
+    FileMetaInfo metaInfo = repomdMetaInfos.take( "primary" );
 
     // only primary is downloaded and needed
-    QString fileName ( rpmDownloaderSettings().cacheDir().absolutePath() + "/" + repoName + "/" + Yum::primaryGzFileName );
-    checkSumChecker->setCheckSumCommand ( rpmDownloaderSettings().checksumCommand() );
-    checkSumChecker->setChecksumAlgorithm(metaInfo.checksumAlgorithm);
-    checkSumChecker->checkSumCheckForFile ( fileName, metaInfo.checksum );
+    QString fileName( rpmDownloaderSettings().cacheDir().absolutePath() + "/" + repoName + "/" + Yum::primaryGzFileName );
+    checkSumChecker->setCheckSumCommand( rpmDownloaderSettings().checksumCommand() );
+    checkSumChecker->setChecksumAlgorithm( metaInfo.checksumAlgorithm );
+    checkSumChecker->checkSumCheckForFile( fileName, metaInfo.checksum );
   }
 }
 
 void YumRepositoryContentDownloader::removeRepoFiles()
 {
-  QFile::remove ( getRepomdFullPath() );
-  QFile::remove ( rpmDownloaderSettings().cacheDir().absolutePath() + "/" + Yum::primaryGzFileName );
+  QFile::remove( getRepomdFullPath() );
+  QFile::remove( rpmDownloaderSettings().cacheDir().absolutePath() + "/" + Yum::primaryGzFileName );
 }
 
-void YumRepositoryContentDownloader::checkSumFinished ( bool ok )
+void YumRepositoryContentDownloader::checkSumFinished( bool ok )
 {
   if ( !ok ) { // checksum failed
     if ( state == PRECHECKSUMCHECK ) {
@@ -419,7 +403,7 @@ void YumRepositoryContentDownloader::checkSumFinished ( bool ok )
   }
 }
 
-void YumRepositoryContentDownloader::checkSumError ( QString error )
+void YumRepositoryContentDownloader::checkSumError( QString error )
 {
   abortContentUpdate();
   errMsg = error;
@@ -428,11 +412,11 @@ void YumRepositoryContentDownloader::checkSumError ( QString error )
 void YumRepositoryContentDownloader::buildCache()
 {
   state = BUILDCACHE;
-  cacheBuilder->setGunzipCommand ( rpmDownloaderSettings().gunzipCommand() );
-  cacheBuilder->buildCache ( dbPath, repoName, rpmDownloaderSettings().cacheDir().absolutePath() + "/" + repoName );
+  cacheBuilder->setGunzipCommand( rpmDownloaderSettings().gunzipCommand() );
+  cacheBuilder->buildCache( dbPath, repoName, rpmDownloaderSettings().cacheDir().absolutePath() + "/" + repoName );
 }
 
-void YumRepositoryContentDownloader::cacheBuildFinished ( bool success )
+void YumRepositoryContentDownloader::cacheBuildFinished( bool success )
 {
   if ( !success ) {
     errMsg = cacheBuilder->readError();
@@ -448,10 +432,10 @@ void YumRepositoryContentDownloader::readContent()
   state = FINISHED;
   RepositorySqliteContentLister dbHandler;
 
-  if ( !dbHandler.fetchContent ( rpmDownloaderSettings().cacheDir().absolutePath() + "/" + repoName + "/" + repoName + ".db", repoName, archs ) ) {
+  if ( !dbHandler.fetchContent( rpmDownloaderSettings().cacheDir().absolutePath() + "/" + repoName + "/" + repoName + ".db", repoName, archs ) ) {
     refreshRepo();
     return;
   }
 
-  emit ( finished ( curProfile, false ) );
+  emit( finished( curProfile, false ) );
 }

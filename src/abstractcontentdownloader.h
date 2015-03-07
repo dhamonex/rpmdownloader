@@ -24,14 +24,10 @@
 #include <QMap>
 #include <QStringList>
 #include <QUrl>
-#include <QUrlInfo>
 #include <QDir>
 
+#include "asynccurlhandle.h"
 #include "repositoryprofile.h"
-
-class RDHttp;
-
-class QFtp;
 
 class AbstractContentDownloader : public QObject
 {
@@ -49,22 +45,19 @@ class AbstractContentDownloader : public QObject
 
     QString readError() const {return errMsg;}
 
-    // inline bool errorOccured() const {if (errMsg.size() > 0) return true; return false;}
-
   signals:
     void finished ( int, bool ); // finished successful or not
 
 
   protected:
-    void closeConnections();
     virtual void abortContentUpdate ( const bool userCancelled = false ) = 0; // internal abort
 
     int curProfile;
     QString repoName;
     QString dbPath;
     volatile bool aborted;
-    QFtp *ftp;
-    RDHttp *http;
+    
+    AsyncCurlHandle *m_curl;
 
     QStringList archs;
     QString repoUrl;

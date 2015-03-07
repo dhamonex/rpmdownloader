@@ -28,10 +28,10 @@ set(rpmdownloader_SRCS
   rdpackagelisterthread.cpp
   yumxmlmetaparser.cpp
   searchfieldlineedit.cpp
-  rdhttp.cpp
   packagearchdetailswidget.cpp
   packagedetailsdialog.cpp
   yumfileconstants.cpp
+  asynccurlhandle.cpp
 )
 
 SET(rpmdownloader_MOC_HDRS
@@ -52,8 +52,8 @@ SET(rpmdownloader_MOC_HDRS
   rddatabasehandler.h
   repositorysqlitecontentlister.h
   searchfieldlineedit.h
-  rdhttp.h
   packagearchdetailswidget.h
+  asynccurlhandle.h
 )
 
 set(rpmdownloader_UIS
@@ -80,4 +80,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 add_executable(rpmdownloader ${rpmdownloader_SRCS} ${rpmdownloader_MOC_SRCS} ${rpmdownloader_RC_SRCS} ${rpmdownloader_UI_HDRS} ${rpmdownloader_QM})
 
-target_link_libraries(rpmdownloader ${QT_LIBRARIES})
+target_link_libraries(rpmdownloader 
+  ${QT_LIBRARIES}
+  ${CURL_LIBRARIES}
+)

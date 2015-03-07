@@ -1,28 +1,29 @@
-<ui version="4.0" >
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
  <class>DownloadProgressDialog</class>
- <widget class="QDialog" name="DownloadProgressDialog" >
-  <property name="geometry" >
+ <widget class="QDialog" name="DownloadProgressDialog">
+  <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>163</height>
+    <width>409</width>
+    <height>188</height>
    </rect>
   </property>
-  <property name="windowTitle" >
+  <property name="windowTitle">
    <string>Download Progress</string>
   </property>
-  <layout class="QVBoxLayout" >
+  <layout class="QVBoxLayout">
    <item>
-    <layout class="QVBoxLayout" >
+    <layout class="QVBoxLayout">
      <item>
-      <layout class="QHBoxLayout" >
+      <layout class="QHBoxLayout">
        <item>
         <spacer>
-         <property name="orientation" >
+         <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
-         <property name="sizeHint" >
+         <property name="sizeHint" stdset="0">
           <size>
            <width>40</width>
            <height>20</height>
@@ -31,18 +32,18 @@
         </spacer>
        </item>
        <item>
-        <widget class="QLabel" name="overallProgressLabel" >
-         <property name="text" >
+        <widget class="QLabel" name="overallProgressLabel">
+         <property name="text">
           <string>Overall Progress</string>
          </property>
         </widget>
        </item>
        <item>
         <spacer>
-         <property name="orientation" >
+         <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
-         <property name="sizeHint" >
+         <property name="sizeHint" stdset="0">
           <size>
            <width>40</width>
            <height>20</height>
@@ -53,8 +54,8 @@
       </layout>
      </item>
      <item>
-      <widget class="QProgressBar" name="overallProgressBar" >
-       <property name="value" >
+      <widget class="QProgressBar" name="overallProgressBar">
+       <property name="value">
         <number>24</number>
        </property>
       </widget>
@@ -62,15 +63,15 @@
     </layout>
    </item>
    <item>
-    <layout class="QVBoxLayout" >
+    <layout class="QVBoxLayout">
      <item>
-      <layout class="QHBoxLayout" >
+      <layout class="QHBoxLayout">
        <item>
         <spacer>
-         <property name="orientation" >
+         <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
-         <property name="sizeHint" >
+         <property name="sizeHint" stdset="0">
           <size>
            <width>40</width>
            <height>20</height>
@@ -79,46 +80,46 @@
         </spacer>
        </item>
        <item>
-        <widget class="QLabel" name="currentRpmLabel" >
-         <property name="text" >
+        <widget class="QLabel" name="currentRpmLabel">
+         <property name="text">
           <string>Current RPM:</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="rpmNameLabel" >
-         <property name="sizePolicy" >
-          <sizepolicy vsizetype="Fixed" hsizetype="Fixed" >
+        <widget class="QLabel" name="rpmNameLabel">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
-         <property name="minimumSize" >
+         <property name="minimumSize">
           <size>
            <width>255</width>
            <height>0</height>
           </size>
          </property>
-         <property name="maximumSize" >
+         <property name="maximumSize">
           <size>
            <width>255</width>
            <height>16777215</height>
           </size>
          </property>
-         <property name="text" >
+         <property name="text">
           <string>None</string>
          </property>
-         <property name="alignment" >
+         <property name="alignment">
           <set>Qt::AlignCenter</set>
          </property>
         </widget>
        </item>
        <item>
         <spacer>
-         <property name="orientation" >
+         <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
-         <property name="sizeHint" >
+         <property name="sizeHint" stdset="0">
           <size>
            <width>40</width>
            <height>20</height>
@@ -129,14 +130,14 @@
       </layout>
      </item>
      <item>
-      <widget class="QProgressBar" name="currentRpmProgressBar" >
-       <property name="minimumSize" >
+      <widget class="QProgressBar" name="currentRpmProgressBar">
+       <property name="minimumSize">
         <size>
          <width>380</width>
          <height>0</height>
         </size>
        </property>
-       <property name="value" >
+       <property name="value">
         <number>24</number>
        </property>
       </widget>
@@ -144,13 +145,13 @@
     </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" >
+    <layout class="QHBoxLayout">
      <item>
       <spacer>
-       <property name="orientation" >
+       <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
-       <property name="sizeHint" >
+       <property name="sizeHint" stdset="0">
         <size>
          <width>40</width>
          <height>20</height>
@@ -159,18 +160,18 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="abortPushButton" >
-       <property name="text" >
+      <widget class="QPushButton" name="abortPushButton">
+       <property name="text">
         <string>Abort</string>
        </property>
       </widget>
      </item>
      <item>
       <spacer>
-       <property name="orientation" >
+       <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
-       <property name="sizeHint" >
+       <property name="sizeHint" stdset="0">
         <size>
          <width>40</width>
          <height>20</height>
@@ -181,6 +182,7 @@
     </layout>
    </item>
   </layout>
+  <zorder></zorder>
  </widget>
  <resources/>
  <connections/>

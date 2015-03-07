@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2009 by Dirk Hartmann                                   *
+ *   Copyright (C) 2015 by Dirk Hartmann                                   *
  *   2monex@gmx.net                                                        *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -18,40 +18,33 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef RDHTTP_H
-#define RDHTTP_H
+#ifndef ASYNCCURLHANDLE_H
+#define ASYNCCURLHANDLE_H
 
-#include <QHttp>
-#include <QFile>
-#include <QUrl>
+#include "curlcleanup.h"
 
+#include <QThread>
 
-class RDHttp : public QHttp
+class AsyncCurlHandle : public QThread
 {
-    Q_OBJECT
+  Q_OBJECT
+  
   public:
-    RDHttp ( QObject* parent = 0 );
-
-    void downloadWithRedirectToFile ( const QHttpRequestHeader &header, QFile *destination );
-    void closeConnection();
-
-  signals:
-    void downloadWithRedirectToFileFinished ( bool error );
-
-  private slots:
-    void downloadFinished ( bool error );
-    void processResponseHeader ( const QHttpResponseHeader &rHeader );
-
+    explicit AsyncCurlHandle( QObject* parent = 0 );
+    
+    CURL *get() { return m_curl.get(); }
+    
+    void reset();
+    
+    void perform() { start(); }
+    CURLcode result() { return m_result; }
+    
+  protected:
+    virtual void run();
+    
   private:
-    QFile *m_destFile;
-
-    bool m_dlWithRedirect;
-    bool m_redirected;
-    bool m_closing;
-
-    QUrl m_redirectedUrl;
-
-
+    CurlPtr m_curl;
+    CURLcode m_result;
 };
 
-#endif // RDHTTP_H
+#endif // ASYNCCURLHANDLE_H

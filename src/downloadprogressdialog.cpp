@@ -19,32 +19,60 @@
  ***************************************************************************/
 #include "downloadprogressdialog.h"
 
-#include <QFtp>
-#include "rdhttp.h"
-
 #include "rpmdownloadersettings.h"
 #include "checksumcheck.h"
 
+int DownloadProgressDialog::curlDownloadCallback( char *ptr, size_t size, size_t nmemb, void *userdata )
+{
+  DownloadProgressDialog *dialog = static_cast<DownloadProgressDialog *>( userdata );
+  if ( dialog->m_aborted ) {
+    return CURLE_WRITE_ERROR;
+  }
+  
+  size_t realsize = size * nmemb;
+  
+  dialog->currentFile.write( ptr, realsize );
+  
+  return realsize;
+}
+
+int DownloadProgressDialog::curlProgressCallback( void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow )
+{
+//   qDebug( "progress dialog: dltotal %li dlnow %li ultotal %li ulnow %li", dltotal, dlnow, ultotal, ulnow );
+  DownloadProgressDialog *dialog = static_cast<DownloadProgressDialog *>( clientp );
+  if ( dltotal == 0 ) {
+    if ( dialog->currentRpm.size() == 0 ) {
+      // size is unknown
+      QMetaObject::invokeMethod( dialog->currentRpmProgressBar, "setMaximum", Qt::QueuedConnection, Q_ARG(int, -1 ) );
+    } else {
+      QMetaObject::invokeMethod( dialog->currentRpmProgressBar, "setMaximum", Qt::QueuedConnection, Q_ARG( int, dialog->currentRpm.size() ) );
+    }
+
+  } else {
+    QMetaObject::invokeMethod( dialog->currentRpmProgressBar, "setMaximum", Qt::QueuedConnection, Q_ARG( int, dltotal ) );
+  }
+
+  QMetaObject::invokeMethod( dialog->currentRpmProgressBar, "setValue", Qt::QueuedConnection, Q_ARG(int, dlnow ) );
+  
+  return 0;
+}
+
+
 DownloadProgressDialog::DownloadProgressDialog ( QWidget* parent, Qt::WFlags fl )
     : QDialog ( parent, fl ), Ui::DownloadProgressDialog(),
-    currentProfile ( -1 ), gotError ( false ), nothingTodo ( false ), redirected ( false ),
-    haveOverallDownloadSize ( false )
+      profiles(), numberOfRpms( 0 ), currentProfile ( -1 ), oldProfileUrl(), deleteOldVersions( false ),  gotError ( false ), nothingTodo ( false ), redirected ( false ),
+      haveOverallDownloadSize ( false ), m_aborted( false ), packageMetaDatasOfCurrentProfile(), currentArch(), currentOnlineFilename(), currentRpm(), currentFile(), errorMsg(),
+      checkSumChecker(), m_currentUrl(), m_curl( new AsyncCurlHandle( this ) )
 {
   setupUi ( this );
 
-  ftp = new QFtp ( this );
-  http = new RDHttp ( this );
   checkSumChecker = new CheckSumCheck ( this );
   layout()->setSizeConstraint ( QLayout::SetFixedSize );
 
   connect ( this, SIGNAL ( readyForDownload() ), this, SLOT ( startDownload() ) );
   connect ( abortPushButton, SIGNAL ( clicked() ), this, SLOT ( abortDownloads() ) );
-
-  connect ( ftp, SIGNAL ( dataTransferProgress ( qint64, qint64 ) ), this, SLOT ( updateTransferProgress ( qint64, qint64 ) ) );
-  connect ( ftp, SIGNAL ( done ( bool ) ), this, SLOT ( ftpFinished ( bool ) ) );
-
-  connect ( http, SIGNAL ( dataReadProgress ( int, int ) ), this, SLOT ( httpTransferData ( int, int ) ) );
-  connect ( http, SIGNAL ( downloadWithRedirectToFileFinished ( bool ) ), this, SLOT ( httpFinished ( bool ) ) );
+  
+  connect( m_curl, SIGNAL( finished() ), this, SLOT( downloadFinished() ) );
 
   connect ( checkSumChecker, SIGNAL ( checkFinished ( bool ) ), this, SLOT ( checkSumFinished ( bool ) ) );
   connect ( checkSumChecker, SIGNAL ( checkFailed ( QString ) ), this, SLOT ( checkSumError ( QString ) ) );
@@ -67,17 +95,8 @@ void DownloadProgressDialog::setProfilesForDownload ( RepositoryProfile* profile
 
 void DownloadProgressDialog::abortDownloads()
 {
-  if ( ftp->state() != QFtp::Unconnected ) {
-    ftp->clearPendingCommands();
-    ftp->close();
-    // ftp->abort();
-  }
-
-  if ( http->state() != QHttp::Unconnected ) {
-    http->clearPendingRequests();
-    http->closeConnection();
-    // http->abort();
-  }
+  
+  m_aborted = true;
 
   if ( oldProfileUrl.isValid() && currentProfile >= 0 ) {
     profiles[currentProfile]->setServerUrl ( oldProfileUrl );
@@ -92,6 +111,7 @@ void DownloadProgressDialog::startDownload()
 {
   gotError = false;
   nothingTodo = false;
+  m_aborted = false;
 
   errorMsg = tr ( "Interrupted through user." );
 
@@ -117,6 +137,10 @@ void DownloadProgressDialog::startDownload()
 
 void DownloadProgressDialog::downloadNextProfile()
 {
+  if ( gotError ) {
+    reject();
+  }
+  
   if ( currentProfile >= 0 && oldProfileUrl.isValid() ) {
     // restore old profile url
     profiles[currentProfile]->setServerUrl ( oldProfileUrl );
@@ -135,6 +159,10 @@ void DownloadProgressDialog::downloadNextProfile()
 
 void DownloadProgressDialog::downloadNextRpm()
 {
+  if ( gotError ) {
+    reject();
+  }
+  
   if ( packageMetaDatasOfCurrentProfile.size() < 1 ) {
     downloadNextProfile();
 
@@ -169,79 +197,60 @@ void DownloadProgressDialog::downloadCurrentPackage()
     return;
   }
 
-  QUrl url;
+  if ( currentRpm.location().isEmpty() ) { // have no location
+    m_currentUrl.setUrl ( profiles.at ( currentProfile )->serverUrl().toString() + "/" + currentArch + "/" + currentOnlineFilename );
+  } else { // can use location href so that I don't need to add the architecture to the url which is more flexible
+    m_currentUrl.setUrl ( profiles.at ( currentProfile )->serverUrl().toString() + "/" + currentRpm.location() );
+  }
 
-  if ( currentRpm.location().isEmpty() ) // have no location
-    url.setUrl ( profiles.at ( currentProfile )->serverUrl().toString() + "/" + currentArch + "/" + currentOnlineFilename );
-  else // can use location href so that I don't need to add the architecture to the url which is more flexible
-    url.setUrl ( profiles.at ( currentProfile )->serverUrl().toString() + "/" + currentRpm.location() );
-
-  if ( !url.isValid() ) {
-    errorMsg = tr ( "Invalid url: %1" ).arg ( url.toString() );
+  if ( !m_currentUrl.isValid() ) {
+    errorMsg = tr ( "Invalid url: %1" ).arg ( m_currentUrl.toString() );
     reject();
     return;
   }
 
   rpmNameLabel->setText ( currentOnlineFilename );
 
-  if ( url.scheme() == "ftp" ) {
-    ftp->connectToHost ( url.host(), url.port ( 21 ) );
-    ftp->login();
-    ftp->get ( url.path(), &currentFile );
-    ftp->close();
-    qDebug ( "Downloading %s to file %s", qPrintable ( url.toString() ), qPrintable ( currentFile.fileName() ) );
-
-  } else if ( url.scheme() == "http" ) {
-    http->setHost ( url.host(), url.port ( 80 ) );
-
-    QHttpRequestHeader header ( "GET", url.path() );
-    header.setValue ( "Host", url.host() );
-    //http->request(header, 0, &currentFile);
-    http->downloadWithRedirectToFile ( header, &currentFile );
-
-    qDebug ( "Downloading %s to file %s", qPrintable ( url.toString() ), qPrintable ( currentFile.fileName() ) );
-
-  } else {
-    errorMsg = tr ( "Scheme %1 is not supported."
-                    "Please select ftp or http." ).arg ( url.scheme() );
+  if ( m_curl->isRunning() ) {
+    errorMsg = tr( "pending download is already is already running" );
+    reject();
+    return;
   }
+  
+  curl_easy_setopt( m_curl->get(), CURLOPT_FOLLOWLOCATION, 1L );
+  curl_easy_setopt( m_curl->get(), CURLOPT_WRITEFUNCTION, &curlDownloadCallback );
+  curl_easy_setopt( m_curl->get(), CURLOPT_WRITEDATA, this );
+  curl_easy_setopt( m_curl->get(), CURLOPT_XFERINFOFUNCTION, &curlProgressCallback );
+  curl_easy_setopt( m_curl->get(), CURLOPT_XFERINFODATA, this );
+  curl_easy_setopt( m_curl->get(), CURLOPT_NOPROGRESS, 0L );
+  
+  curl_easy_setopt( m_curl->get(), CURLOPT_URL, m_currentUrl.toString().toAscii().data() );
+  
+  m_curl->perform();
+
+  qDebug ( "Downloading %s to file %s", qPrintable ( m_currentUrl.toString() ), qPrintable ( currentFile.fileName() ) );
 }
 
-void DownloadProgressDialog::ftpFinished ( bool error )
+void DownloadProgressDialog::downloadFinished()
 {
   currentFile.close();
-  // qDebug("finished %s", qPrintable(currentFile.fileName()));
-
-  if ( error ) {
-    errorMsg = tr ( "FTP transfer error: %1" ).arg ( ftp->errorString() );
+  
+  if ( m_aborted ) {
     abortDownloads();
-
-  } else {
-    if ( rpmDownloaderSettings().doCheckSumCheckOnDownloadedPackages() && !currentRpm.shaCheckSum().isEmpty() ) {
-      checkSumChecker->setChecksumAlgorithm( currentRpm.checkSumAlgorithm() );
-      checkSumChecker->checkSumCheckForFile ( currentFile.fileName(), currentRpm.shaCheckSum() );
-    } else {
-      downloadNext();
-    }
+    return;
   }
-}
-
-void DownloadProgressDialog::httpFinished ( bool error )
-{
-  currentFile.close();
-
-  if ( error ) {
-    errorMsg = tr ( "HTTP transfer error: %1" ).arg ( http->errorString() );
+  
+  if ( m_curl->result() != CURLE_OK && !m_aborted ) {
+    errorMsg = tr( "error on download of %1 : %2" ).arg( m_currentUrl.toString() ).arg( curl_easy_strerror( m_curl->result() ) );
     abortDownloads();
-    qDebug ( "http error %s", qPrintable ( errorMsg ) );
-
+    return;
+  }
+  
+  if ( rpmDownloaderSettings().doCheckSumCheckOnDownloadedPackages() && !currentRpm.shaCheckSum().isEmpty() ) {
+    checkSumChecker->setChecksumAlgorithm( currentRpm.checkSumAlgorithm() );
+    checkSumChecker->checkSumCheckForFile ( currentFile.fileName(), currentRpm.shaCheckSum() );
   } else {
-    if ( rpmDownloaderSettings().doCheckSumCheckOnDownloadedPackages() && !currentRpm.shaCheckSum().isEmpty() ) {
-      checkSumChecker->setChecksumAlgorithm( currentRpm.checkSumAlgorithm() );
-      checkSumChecker->checkSumCheckForFile ( currentFile.fileName(), currentRpm.shaCheckSum() );
-    } else {
-      downloadNext();
-    }
+    downloadNext();
   }
 }
 
@@ -269,21 +278,6 @@ void DownloadProgressDialog::checkSumError ( QString error )
   reject();
 }
 
-void DownloadProgressDialog::updateTransferProgress ( qint64 done, qint64 total )
-{
-  if ( total == -1 ) {
-    if ( currentRpm.size() == 0 ) // it's unknown
-      currentRpmProgressBar->setMaximum ( -1 );
-    else
-      currentRpmProgressBar->setMaximum ( currentRpm.size() );
-
-  } else {
-    currentRpmProgressBar->setMaximum ( total );
-  }
-
-  currentRpmProgressBar->setValue ( done );
-}
-
 void DownloadProgressDialog::downloadNext()
 {
   if ( !haveOverallDownloadSize )
@@ -292,11 +286,6 @@ void DownloadProgressDialog::downloadNext()
     overallProgressBar->setValue ( overallProgressBar->value() + currentRpm.size() );
 
   downloadNextRpm();
-}
-
-void DownloadProgressDialog::httpTransferData ( int done, int total )
-{
-  updateTransferProgress ( done, total );
 }
 
 void DownloadProgressDialog::setDeleteOldVersion ( bool deleteOld )
