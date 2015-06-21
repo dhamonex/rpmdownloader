@@ -22,10 +22,10 @@
 
 #include "rdnamespace.h"
 
-#include <QString>
-#include <QStringList>
-#include <QMap>
-#include <QHash>
+#include <QtCore/QString>
+#include <QtCore/QStringList>
+#include <QtCore/QMap>
+#include <QtCore/QHash>
 
 class PackageMetaData;
 

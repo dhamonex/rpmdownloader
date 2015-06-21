@@ -23,7 +23,7 @@
 #include "abstractcontentdownloader.h"
 #include "yumrepomddomparser.h"
 
-#include <QDir>
+#include <QtCore/QDir>
 
 class CheckSumCheck;
 class YumCacheBuilder;

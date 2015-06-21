@@ -21,7 +21,7 @@
 #ifndef PROFILESETTINGSDIALOG_H
 #define PROFILESETTINGSDIALOG_H
 
-#include <QDialog>
+#include <QtWidgets//QDialog>
 #include "ui_profilesettingsdialog.h"
 
 #include "repositoryprofile.h"
@@ -31,7 +31,7 @@ class ProfileSettingsDialog : public QDialog, private Ui::profileSettingsDialog
     Q_OBJECT
 
   public:
-    ProfileSettingsDialog ( RepositoryProfile *repositoryProfile, QWidget* parent = 0, Qt::WFlags fl = 0 );
+    ProfileSettingsDialog ( RepositoryProfile *repositoryProfile, QWidget* parent = 0, Qt::WindowFlags fl = 0 );
     ~ProfileSettingsDialog();
     /*$PUBLIC_FUNCTIONS$*/
 

@@ -20,7 +20,7 @@
 #ifndef RDPACKAGELISTERTHREAD_H
 #define RDPACKAGELISTERTHREAD_H
 
-#include <QThread>
+#include <QtCore/QThread>
 #include "repositorysqlitecontentlister.h"
 
 class QDir;

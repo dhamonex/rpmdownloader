@@ -20,7 +20,7 @@
 #ifndef YUMFILECONSTANTS_H
 #define YUMFILECONSTANTS_H
 
-#include <QString>
+#include <QtCore/QString>
 
 namespace Yum {
   extern const QString filelistGzFileName;

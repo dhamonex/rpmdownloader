@@ -20,11 +20,11 @@
 #ifndef PACKAGE_H
 #define PACKAGE_H
 
-#include <QString>
-#include <QDir>
-#include <QUrl>
-#include <QStringList>
-#include <QMap>
+#include <QtCore/QString>
+#include <QtCore/QDir>
+#include <QtCore/QUrl>
+#include <QtCore/QStringList>
+#include <QtCore/QMap>
 
 #include "rdnamespace.h"
 #include "packagemetadata.h"

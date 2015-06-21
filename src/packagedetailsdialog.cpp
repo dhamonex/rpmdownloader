@@ -20,9 +20,9 @@
 
 #include "packagedetailsdialog.h"
 
-#include <QVBoxLayout>
-#include <QLabel>
-#include <QPushButton>
+#include <QtWidgets/QVBoxLayout>
+#include <QtWidgets/QLabel>
+#include <QtWidgets/QPushButton>
 
 #include "packagearchdetailswidget.h"
 

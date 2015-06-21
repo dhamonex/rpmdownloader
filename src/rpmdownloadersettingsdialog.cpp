@@ -21,9 +21,9 @@
 
 #include "rpmdownloadersettingsdialog.h"
 
-#include <QFileDialog>
+#include <QtWidgets/QFileDialog>
 
-RpmDownloaderSettingsDialog::RpmDownloaderSettingsDialog ( QWidget* parent, Qt::WFlags fl )
+RpmDownloaderSettingsDialog::RpmDownloaderSettingsDialog ( QWidget* parent, Qt::WindowFlags fl )
     : QDialog ( parent, fl ), Ui::RpmDownloaderSettingsDialog()
 {
   setupUi ( this );

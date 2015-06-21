@@ -20,11 +20,11 @@
 #ifndef ABSTRACTCONTENTDOWNLOADER_H
 #define ABSTRACTCONTENTDOWNLOADER_H
 
-#include <QObject>
-#include <QMap>
-#include <QStringList>
-#include <QUrl>
-#include <QDir>
+#include <QtCore/QObject>
+#include <QtCore/QMap>
+#include <QtCore/QStringList>
+#include <QtCore/QUrl>
+#include <QtCore/QDir>
 
 #include "asynccurlhandle.h"
 #include "repositoryprofile.h"

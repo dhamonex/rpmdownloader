@@ -215,11 +215,11 @@ QString PackageMetaData::sizeAsString ( const qint64 size )
   // do some more human readable output
   if ( size / 1000000 > 0 ) {
     // round 2 decimal 2 places
-    qreal tmpSize = qRound64 ( size / 10000 );
+    qreal tmpSize = qRound64 ( size / 10000.0 );
     return QString ( "%1 M" ).arg ( tmpSize / 100 );
 
   } else if ( size / 1000 ) {
-    qreal tmpSize = qRound64 ( size / 10 );
+    qreal tmpSize = qRound64 ( size / 10.0 );
     return QString ( "%1 K" ).arg ( tmpSize / 100 );
   }
 

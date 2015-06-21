@@ -21,7 +21,7 @@
 #ifndef RPMNAMEDIALOG_H
 #define RPMNAMEDIALOG_H
 
-#include <QDialog>
+#include <QtWidgets/QDialog>
 #include "ui_rpmnamedialog.h"
 
 class RpmNameDialog : public QDialog, private Ui::RpmNameDialog
@@ -29,7 +29,7 @@ class RpmNameDialog : public QDialog, private Ui::RpmNameDialog
     Q_OBJECT
 
   public:
-    RpmNameDialog ( const QString name, const QStringList rpmNamesList, bool canResolveDeps = false, bool showDepsCheckbox = false, QWidget* parent = 0, Qt::WFlags fl = 0 );
+    RpmNameDialog ( const QString name, const QStringList rpmNamesList, bool canResolveDeps = false, bool showDepsCheckbox = false, QWidget* parent = 0, Qt::WindowFlags fl = 0 );
     ~RpmNameDialog();
     /*$PUBLIC_FUNCTIONS$*/
     QString getName() const;

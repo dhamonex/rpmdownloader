@@ -25,7 +25,7 @@
 #include "repositorysqlitecontentlister.h"
 #include "rpmdownloadersettings.h"
 
-#include <QUrl>
+#include <QtCore/QUrl>
 
 size_t YumRepositoryContentDownloader::yumContentDownloaderCallback( char *ptr, size_t size, size_t nmemb, void *userdata )
 {
@@ -253,7 +253,7 @@ void YumRepositoryContentDownloader::downloadFile( const QUrl &url, const QStrin
   curl_easy_setopt( m_curl->get(), CURLOPT_WRITEFUNCTION, &yumContentDownloaderCallback );
   curl_easy_setopt( m_curl->get(), CURLOPT_WRITEDATA, this );
   
-  curl_easy_setopt( m_curl->get(), CURLOPT_URL, url.toString().toAscii().data() );
+  curl_easy_setopt( m_curl->get(), CURLOPT_URL, url.toString().toLatin1().data() );
   
   m_curl->perform();
 }

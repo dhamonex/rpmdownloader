@@ -18,9 +18,9 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include <QApplication>
-#include <QTranslator>
-#include <QLocale>
+#include <QtWidgets/QApplication>
+#include <QtCore/QTranslator>
+#include <QtCore/QLocale>
 #include "mainwindow.h"
 
 int main ( int argc, char *argv[] )

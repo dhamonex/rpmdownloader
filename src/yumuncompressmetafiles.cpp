@@ -20,7 +20,7 @@
 #include "yumuncompressmetafiles.h"
 #include "yumfileconstants.h"
 
-#include <QProcess>
+#include <QtCore/QProcess>
 
 YumUncompressMetaFiles::YumUncompressMetaFiles(QObject *parent)
 		: QObject(parent), gunzipCommand("/usr/bin/gunzip"), active(false)

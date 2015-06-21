@@ -20,7 +20,7 @@
 #ifndef YUMCACHEBUILDERTHREAD_H
 #define YUMCACHEBUILDERTHREAD_H
 
-#include <QThread>
+#include <QtCore/QThread>
 
 // #include "yumsaxmetaparser.h"
 #include "yumxmlmetaparser.h"

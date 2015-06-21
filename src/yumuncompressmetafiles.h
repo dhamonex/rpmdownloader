@@ -20,9 +20,9 @@
 #ifndef YUMUNCOMPRESSMETAFILES_H
 #define YUMUNCOMPRESSMETAFILES_H
 
-#include <QObject>
-#include <QFile>
-#include <QProcess>
+#include <QtCore/QObject>
+#include <QtCore/QFile>
+#include <QtCore/QProcess>
 
 class YumUncompressMetaFiles : public QObject
 {

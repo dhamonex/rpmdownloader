@@ -19,9 +19,9 @@
  ***************************************************************************/
 #include "rddatabaseinserter.h"
 
-#include <QSqlDatabase>
-#include <QSqlError>
-#include <QSqlQuery>
+#include <QtSql/QSqlDatabase>
+#include <QtSql/QSqlError>
+#include <QtSql/QSqlQuery>
 
 RDDatabaseInserter::RDDatabaseInserter ( QObject* parent )
     : RDDatabaseHandler ( parent )

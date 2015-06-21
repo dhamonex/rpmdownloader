@@ -23,10 +23,10 @@
 #include "rddatabasehandler.h"
 #include "packagemetadata.h"
 
-#include <QHash>
-#include <QMap>
-#include <QString>
-#include <QStringList>
+#include <QtCore/QHash>
+#include <QtCore/QMap>
+#include <QtCore/QString>
+#include <QtCore/QStringList>
 
 using namespace MetaData;
 

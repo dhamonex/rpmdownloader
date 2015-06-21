@@ -19,7 +19,7 @@
  ***************************************************************************/
 #include "rdpackagelisterthread.h"
 
-#include <QDir>
+#include <QtCore/QDir>
 
 RDPackageListerThread::RDPackageListerThread ( QObject* parent )
     : QThread ( parent )

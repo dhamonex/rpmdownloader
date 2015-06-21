@@ -19,7 +19,7 @@
  ***************************************************************************/
 #include "abstractcontentdownloader.h"
 
-#include <QRegExp>
+#include <QtCore/QRegExp>
 
 AbstractContentDownloader::AbstractContentDownloader ( QObject *parent )
     : QObject ( parent ), curProfile ( -1 ), aborted ( false ), m_curl( new AsyncCurlHandle( this ) )

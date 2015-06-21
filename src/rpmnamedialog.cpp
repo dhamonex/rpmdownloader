@@ -19,10 +19,10 @@
  ***************************************************************************/
 #include "rpmnamedialog.h"
 
-#include <QCompleter>
+#include <QtWidgets/QCompleter>
 
 RpmNameDialog::RpmNameDialog ( const QString name, const QStringList rpmNamesList, bool canResolveDeps,
-                               bool showDepsCheckbox, QWidget * parent, Qt::WFlags fl )
+                               bool showDepsCheckbox, QWidget * parent, Qt::WindowFlags fl )
     : QDialog ( parent, fl ), Ui::RpmNameDialog()
 {
   setupUi ( this );

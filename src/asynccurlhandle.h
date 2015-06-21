@@ -23,7 +23,7 @@
 
 #include "curlcleanup.h"
 
-#include <QThread>
+#include <QtCore/QThread>
 
 class AsyncCurlHandle : public QThread
 {

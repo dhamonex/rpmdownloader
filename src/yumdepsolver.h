@@ -23,9 +23,9 @@
 #include "rddatabasehandler.h"
 #include "rdnamespace.h"
 
-#include <QString>
-#include <QStringList>
-#include <QMultiHash>
+#include <QtCore/QString>
+#include <QtCore/QStringList>
+#include <QtCore/QMultiHash>
 
 class QProgressDialog;
 

@@ -19,9 +19,9 @@
  ***************************************************************************/
 #include "repositorysqlitecontentlister.h"
 
-#include <QSqlDatabase>
-#include <QSqlQuery>
-#include <QVariant>
+#include <QtSql/QSqlDatabase>
+#include <QtSql/QSqlQuery>
+#include <QtCore/QVariant>
 
 RepositorySqliteContentLister::RepositorySqliteContentLister ( QObject * parent )
     : RDDatabaseHandler ( parent )

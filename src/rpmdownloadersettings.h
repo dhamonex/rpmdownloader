@@ -20,8 +20,8 @@
 #ifndef RPMDOWNLOADERSETTINGS_H
 #define RPMDOWNLOADERSETTINGS_H
 
-#include <QDir>
-#include <QString>
+#include <QtCore/QDir>
+#include <QtCore/QString>
 
 class RpmDownloaderSettings
 {

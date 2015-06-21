@@ -58,7 +58,7 @@ int DownloadProgressDialog::curlProgressCallback( void *clientp, curl_off_t dlto
 }
 
 
-DownloadProgressDialog::DownloadProgressDialog ( QWidget* parent, Qt::WFlags fl )
+DownloadProgressDialog::DownloadProgressDialog ( QWidget* parent, Qt::WindowFlags fl )
     : QDialog ( parent, fl ), Ui::DownloadProgressDialog(),
       profiles(), numberOfRpms( 0 ), currentProfile ( -1 ), oldProfileUrl(), deleteOldVersions( false ),  gotError ( false ), nothingTodo ( false ), redirected ( false ),
       haveOverallDownloadSize ( false ), m_aborted( false ), packageMetaDatasOfCurrentProfile(), currentArch(), currentOnlineFilename(), currentRpm(), currentFile(), errorMsg(),
@@ -224,7 +224,7 @@ void DownloadProgressDialog::downloadCurrentPackage()
   curl_easy_setopt( m_curl->get(), CURLOPT_XFERINFODATA, this );
   curl_easy_setopt( m_curl->get(), CURLOPT_NOPROGRESS, 0L );
   
-  curl_easy_setopt( m_curl->get(), CURLOPT_URL, m_currentUrl.toString().toAscii().data() );
+  curl_easy_setopt( m_curl->get(), CURLOPT_URL, m_currentUrl.toString().toLatin1().data() );
   
   m_curl->perform();
 

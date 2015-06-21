@@ -21,7 +21,7 @@
 #ifndef PACKAGEDETAILSDIALOG_H
 #define PACKAGEDETAILSDIALOG_H
 
-#include <QDialog>
+#include <QtWidgets/QDialog>
 
 #include "package.h"
 
