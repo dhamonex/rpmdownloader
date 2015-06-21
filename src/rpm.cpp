@@ -19,7 +19,7 @@
  ***************************************************************************/
 #include "rpm.h"
 
-#include <QDir>
+#include <QtCore/QDir>
 
 Rpm::Rpm()
     : name(), status ( UNKNOWN )

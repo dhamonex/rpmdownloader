@@ -20,8 +20,8 @@
 #ifndef CHECKSUMCHECK_H
 #define CHECKSUMCHECK_H
 
-#include <QObject>
-#include <QProcess>
+#include <QtCore/QObject>
+#include <QtCore/QProcess>
 
 class QProcess;
 

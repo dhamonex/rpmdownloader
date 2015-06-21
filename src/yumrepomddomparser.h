@@ -20,8 +20,8 @@
 #ifndef YUMREPOMDDOMPARSER_H
 #define YUMREPOMDDOMPARSER_H
 
-#include <QString>
-#include <QMap>
+#include <QtCore/QString>
+#include <QtCore/QMap>
 
 class QDomElement;
 

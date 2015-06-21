@@ -23,7 +23,7 @@
 #include "rdnamespace.h"
 #include "packagemetadata.h"
 
-#include <QString>
+#include <QtCore/QString>
 
 class Rpm
 {

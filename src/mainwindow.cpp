@@ -19,7 +19,16 @@
  ***************************************************************************/
 #include "mainwindow.h"
 
-#include <QtGui>
+#include <QtGui/QMenuBar>
+#include <QtGui/QMenu>
+#include <QtGui/QStatusBar>
+#include <QtGui/QMessageBox>
+#include <QtGui/QToolBar>
+#include <QtGui/QCloseEvent>
+#include <QtGui/QFileDialog>
+
+#include <QtCore/QSettings>
+
 #include <curl/curl.h>
 
 #include "rpmdownloaderwidget.h"

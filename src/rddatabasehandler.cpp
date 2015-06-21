@@ -19,13 +19,13 @@
  ***************************************************************************/
 #include "rddatabasehandler.h"
 
-#include <QSqlDatabase>
-#include <QStringList>
-#include <QSqlError>
-#include <QSqlQuery>
-#include <QSqlRecord>
-#include <QMap>
-#include <QVariant>
+#include <QtSql/QSqlDatabase>
+#include <QtCore/QStringList>
+#include <QtSql/QSqlError>
+#include <QtSql/QSqlQuery>
+#include <QtSql/QSqlRecord>
+#include <QtCore/QMap>
+#include <QtCore/QVariant>
 
 QMap<QString, QStringList> RDDatabaseHandler::tableFields;
 QString RDDatabaseHandler::databaseVersion = "0.11.4";

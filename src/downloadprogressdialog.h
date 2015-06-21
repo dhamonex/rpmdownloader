@@ -21,8 +21,8 @@
 #ifndef DOWNLOADPROGRESSDIALOG_H
 #define DOWNLOADPROGRESSDIALOG_H
 
-#include <QDialog>
-#include <QList>
+#include <QtWidgets/QDialog>
+#include <QtCore/QList>
 #include "ui_downloadprogressdialog.h"
 #include "repositoryprofile.h"
 #include "rpm.h"
@@ -36,7 +36,7 @@ class DownloadProgressDialog : public QDialog, private Ui::DownloadProgressDialo
 {
     Q_OBJECT
   public:
-    DownloadProgressDialog ( QWidget* parent = 0, Qt::WFlags fl = 0 );
+    DownloadProgressDialog ( QWidget* parent = 0, Qt::WindowFlags fl = 0 );
     ~DownloadProgressDialog();
 
     void setNumberOfRpms ( int number );

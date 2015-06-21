@@ -19,7 +19,7 @@
  ***************************************************************************/
 #include "checksumcheck.h"
 
-#include <QFile>
+#include <QtCore/QFile>
 
 CheckSumCheck::CheckSumCheck ( QObject *parent )
     : QObject ( parent ), cSumCommand ( "/usr/bin/shasum" ), cAlgorithm("1")

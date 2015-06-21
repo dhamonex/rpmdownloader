@@ -19,9 +19,9 @@
  ***************************************************************************/
 #include "searchfieldlineedit.h"
 
-#include <QToolButton>
-#include <QStyle>
-#include <QTimer>
+#include <QtWidgets/QToolButton>
+#include <QtWidgets/QStyle>
+#include <QtCore/QTimer>
 
 SearchFieldLineEdit::SearchFieldLineEdit ( QWidget* parent )
     : QLineEdit ( parent ), emptyHelpText ( ), submitTimeout ( 200 )

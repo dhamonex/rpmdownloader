@@ -22,8 +22,8 @@
 #include "rpmdownloadersettings.h"
 #include "rddatabasehandler.h"
 
-#include <QApplication>
-#include <QSet>
+#include <QtWidgets/QApplication>
+#include <QtCore/QSet>
 
 RepositoryProfile::RepositoryProfile ( QObject *parent )
     : QObject ( parent ), curProfileName ( QApplication::translate ( "RepositoryProfile", "new profile" ) ),

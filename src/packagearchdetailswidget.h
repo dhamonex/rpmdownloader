@@ -21,7 +21,7 @@
 #ifndef PACKAGEARCHDETAILSWIDGET_H
 #define PACKAGEARCHDETAILSWIDGET_H
 
-#include <QWidget>
+#include <QtWidgets/QWidget>
 #include "ui_packagearchdetailswidget.h"
 
 #include "packagemetadata.h"

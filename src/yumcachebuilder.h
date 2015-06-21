@@ -22,7 +22,7 @@
 
 #include "yumuncompressmetafiles.h"
 
-#include <QObject>
+#include <QtCore/QObject>
 
 class YumCacheBuilderThread;
 

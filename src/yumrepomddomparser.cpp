@@ -19,10 +19,10 @@
  ***************************************************************************/
 #include "yumrepomddomparser.h"
 
-#include <QDomDocument>
-#include <QFile>
-#include <QApplication>
-#include <QRegExp>
+#include <QtXml/QDomDocument>
+#include <QtCore/QFile>
+#include <QtWidgets/QApplication>
+#include <QtCore/QRegExp>
 #include "checksumcheck.h"
 
 namespace RepoMDXmlTags {

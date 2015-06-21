@@ -20,11 +20,11 @@
 #ifndef REPOSITORYPROFILE_H
 #define REPOSITORYPROFILE_H
 
-#include <QString>
-#include <QDir>
-#include <QMultiHash>
-#include <QUrl>
-#include <QObject>
+#include <QtCore/QString>
+#include <QtCore/QDir>
+#include <QtCore/QMultiHash>
+#include <QtCore/QUrl>
+#include <QtCore/QObject>
 
 #include "rdnamespace.h"
 #include "package.h"

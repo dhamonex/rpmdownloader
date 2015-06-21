@@ -21,9 +21,9 @@
 
 #include "yumfileconstants.h"
 
-#include <QFile>
-#include <QXmlSimpleReader>
-#include <QBuffer>
+#include <QtCore/QFile>
+#include <QtXml/QXmlSimpleReader>
+#include <QtCore/QBuffer>
 
 YumCacheBuilderThread::YumCacheBuilderThread ( QObject *parent )
     : QThread ( parent ), m_success ( true ), m_maxPrimaryFileSize ( 0 )

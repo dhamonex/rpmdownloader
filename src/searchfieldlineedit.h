@@ -20,7 +20,7 @@
 #ifndef SEARCHFIELDLINEEDIT_H
 #define SEARCHFIELDLINEEDIT_H
 
-#include <QLineEdit>
+#include <QtWidgets/QLineEdit>
 
 class QToolButton;
 

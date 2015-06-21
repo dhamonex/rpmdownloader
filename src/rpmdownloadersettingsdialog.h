@@ -21,7 +21,7 @@
 #ifndef RPMDOWNLOADERSETTINGSDIALOG_H
 #define RPMDOWNLOADERSETTINGSDIALOG_H
 
-#include <QDialog>
+#include <QtWidgets/QDialog>
 #include "ui_rpmdownloadersettingsdialog.h"
 #include "rpmdownloadersettings.h"
 
@@ -30,7 +30,7 @@ class RpmDownloaderSettingsDialog : public QDialog, private Ui::RpmDownloaderSet
     Q_OBJECT
 
   public:
-    RpmDownloaderSettingsDialog ( QWidget* parent = 0, Qt::WFlags fl = 0 );
+    RpmDownloaderSettingsDialog ( QWidget* parent = 0, Qt::WindowFlags fl = 0 );
     ~RpmDownloaderSettingsDialog();
 
   public slots:

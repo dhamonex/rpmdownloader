@@ -20,9 +20,9 @@
 
 #include "packagedetailsdialog.h"
 
-#include <QVBoxLayout>
-#include <QLabel>
-#include <QPushButton>
+#include <QtWidgets/QVBoxLayout>
+#include <QtWidgets/QLabel>
+#include <QtWidgets/QPushButton>
 
 #include "packagearchdetailswidget.h"
 
@@ -71,5 +71,10 @@ PackageDetailsDialog::PackageDetailsDialog ( const Package &package, const QIcon
   setLayout ( vboxLayout );
 
   layout()->setSizeConstraint ( QLayout::SetFixedSize );
+}
+
+PackageDetailsDialog::~PackageDetailsDialog()
+{
+
 }
 

@@ -22,7 +22,7 @@
 #include "packagemetadata.h"
 #include "rpmdownloadersettings.h"
 
-#include <QApplication>
+#include <QtWidgets/QApplication>
 
 size_t PlainRepositoryContentDownloader::plainContentCallback( char *ptr, size_t size, size_t nmemb, void *userdata )
 {
@@ -137,7 +137,7 @@ void PlainRepositoryContentDownloader::updateNextArch()
     curl_easy_setopt( m_curl->get(), CURLOPT_WRITEFUNCTION, &plainContentCallback );
     curl_easy_setopt( m_curl->get(), CURLOPT_WRITEDATA, this );
   
-    curl_easy_setopt( m_curl->get(), CURLOPT_URL, m_currentUrl.toString().toAscii().data() );
+    curl_easy_setopt( m_curl->get(), CURLOPT_URL, m_currentUrl.toString().toLatin1().data() );
   
     m_curl->perform();
     

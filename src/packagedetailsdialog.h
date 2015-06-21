@@ -21,14 +21,17 @@
 #ifndef PACKAGEDETAILSDIALOG_H
 #define PACKAGEDETAILSDIALOG_H
 
-#include <QDialog>
+#include <QtWidgets/QDialog>
 
 #include "package.h"
 
 class PackageDetailsDialog : public QDialog
 {
+    Q_OBJECT
+    
   public:
     PackageDetailsDialog ( const Package &package, const QIcon &icon, QWidget* parent = 0, Qt::WindowFlags f = 0 );
+    virtual ~PackageDetailsDialog();
 
 };
 

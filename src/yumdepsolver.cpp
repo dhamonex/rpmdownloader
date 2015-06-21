@@ -21,11 +21,11 @@
 
 #include "rpm.h"
 
-#include <QSqlDatabase>
-#include <QSqlQuery>
-#include <QVariant>
-#include <QApplication>
-#include <QProgressDialog>
+#include <QtSql/QSqlDatabase>
+#include <QtSql/QSqlQuery>
+#include <QtCore/QVariant>
+#include <QtWidgets/QApplication>
+#include <QtWidgets/QProgressDialog>
 
 YumDepSolver::YumDepSolver(QObject *parent)
 		: RDDatabaseHandler(parent), useMemDb(false)

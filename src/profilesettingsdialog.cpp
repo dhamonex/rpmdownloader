@@ -19,10 +19,10 @@
  ***************************************************************************/
 #include "profilesettingsdialog.h"
 
-#include <QFileDialog>
+#include <QtWidgets/QFileDialog>
 
 ProfileSettingsDialog::ProfileSettingsDialog ( RepositoryProfile *repositoryProfile,
-    QWidget* parent, Qt::WFlags fl )
+    QWidget* parent, Qt::WindowFlags fl )
     : QDialog ( parent, fl ), Ui::profileSettingsDialog()
 {
   setupUi ( this );

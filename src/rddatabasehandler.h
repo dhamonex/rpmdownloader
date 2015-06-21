@@ -20,7 +20,7 @@
 #ifndef RDDATABASEHANDLER_H
 #define RDDATABASEHANDLER_H
 
-#include <QObject>
+#include <QtCore/QObject>
 
 template<class Key, class T >
 

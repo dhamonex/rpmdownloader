@@ -20,7 +20,7 @@
 #ifndef RPMDOWNLOADERWIDGET_H
 #define RPMDOWNLOADERWIDGET_H
 
-#include <QWidget>
+#include <QtWidgets/QWidget>
 #include "repositoryprofile.h"
 #include "rpmdownloadersettings.h"
 #include "downloadprogressdialog.h"

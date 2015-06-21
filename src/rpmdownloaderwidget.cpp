@@ -19,7 +19,14 @@
  ***************************************************************************/
 #include "rpmdownloaderwidget.h"
 
-#include <QtGui>
+#include <QtGui/QHeaderView>
+#include <QtGui/QMessageBox>
+#include <QtGui/QProgressBar>
+#include <QtGui/QProgressDialog>
+#include <QtGui/QClipboard>
+#include <QtWidgets/QTableWidget>
+#include <QtCore/QTimer>
+
 #include "plainrepositorycontentdownloader.h"
 #include "yumrepositorycontentdownloader.h"
 #include "rddatabasehandler.h"
@@ -138,7 +145,7 @@ void RpmDownloaderWidget::clearProfilesTable()
 
     // add coloumn size policy
     profilesTableWidget->resizeColumnsToContents();
-    profilesTableWidget->horizontalHeader()->setResizeMode( 1, QHeaderView::Stretch );
+    profilesTableWidget->horizontalHeader()->setSectionResizeMode( 1, QHeaderView::Stretch );
     profilesTableWidget->horizontalHeader()->setHighlightSections( false );
     profilesTableWidget->setAlternatingRowColors( true );
 
