@@ -19,12 +19,12 @@
  ***************************************************************************/
 #include "rpmdownloaderwidget.h"
 
-#include <QtGui/QTableWidget>
 #include <QtGui/QHeaderView>
 #include <QtGui/QMessageBox>
 #include <QtGui/QProgressBar>
 #include <QtGui/QProgressDialog>
 #include <QtGui/QClipboard>
+#include <QtWidgets/QTableWidget>
 #include <QtCore/QTimer>
 
 #include "plainrepositorycontentdownloader.h"

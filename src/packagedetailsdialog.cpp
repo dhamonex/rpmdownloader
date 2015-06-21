@@ -73,3 +73,8 @@ PackageDetailsDialog::PackageDetailsDialog ( const Package &package, const QIcon
   layout()->setSizeConstraint ( QLayout::SetFixedSize );
 }
 
+PackageDetailsDialog::~PackageDetailsDialog()
+{
+
+}
+

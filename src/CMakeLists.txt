@@ -52,6 +52,7 @@ SET(rpmdownloader_MOC_HDRS
   searchfieldlineedit.h
   packagearchdetailswidget.h
   asynccurlhandle.h
+  packagedetailsdialog.h
 )
 
 set(rpmdownloader_UIS
