@@ -35,67 +35,67 @@
 RpmDownloaderWidget::RpmDownloaderWidget( QWidget *parent )
         : QWidget( parent )
 {
-    profilesTableWidget = new QTableWidget;
-    profilesTableWidget->verticalHeader()->hide();
-    packagesTableWidget = new QTableWidget;
-    packagesTableWidget->verticalHeader()->hide();
+    m_profilesTableWidget = new QTableWidget;
+    m_profilesTableWidget->verticalHeader()->hide();
+    m_packagesTableWidget = new QTableWidget;
+    m_packagesTableWidget->verticalHeader()->hide();
 
     QGridLayout *mainGridLayout = new QGridLayout;
-    mainGridLayout->addWidget( profilesTableWidget, 0, 0 );
-    mainGridLayout->addWidget( packagesTableWidget, 0, 1 );
+    mainGridLayout->addWidget( m_profilesTableWidget, 0, 0 );
+    mainGridLayout->addWidget( m_packagesTableWidget, 0, 1 );
     // add a bit of stretching
     mainGridLayout->setColumnStretch( 0, 4 );
     mainGridLayout->setColumnStretch( 1, 10 );
 
     setLayout( mainGridLayout );
 
-    statusUpdateProgressDialog = 0;
+    m_statusUpdateProgressDialog = 0;
 
-    profilesTableWidget->setContextMenuPolicy( Qt::ActionsContextMenu );
-    packagesTableWidget->setContextMenuPolicy( Qt::ActionsContextMenu );
-    packagesTableWidget->setMouseTracking( true );
+    m_profilesTableWidget->setContextMenuPolicy( Qt::ActionsContextMenu );
+    m_packagesTableWidget->setContextMenuPolicy( Qt::ActionsContextMenu );
+    m_packagesTableWidget->setMouseTracking( true );
 
-    currentUpdatedProfile = -1;
-    updateTimer = new QTimer( this );
-    updateTimer->setSingleShot( true );
+    m_currentUpdatedProfile = -1;
+    m_updateTimer = new QTimer( this );
+    m_updateTimer->setSingleShot( true );
 
     // content downloaders
-    plainContentDownloader = new PlainRepositoryContentDownloader( this );
-    yumContentDownloader = new YumRepositoryContentDownloader( this );
+    m_plainContentDownloader = new PlainRepositoryContentDownloader( this );
+    m_yumContentDownloader = new YumRepositoryContentDownloader( this );
 
-    loading = false;
+    m_loading = false;
 
     clearAll();
-    connect( profilesTableWidget, SIGNAL( currentCellChanged( int, int, int, int ) ), this, SLOT( clearAndInsertPackagesTable( int, int, int, int ) ) );
-    connect( profilesTableWidget, SIGNAL( cellDoubleClicked( int, int ) ), this, SLOT( profileDoubleClicked( int, int ) ) );
-    connect( packagesTableWidget, SIGNAL( cellDoubleClicked( int, int ) ), this, SLOT( packageDoubleClicked( int, int ) ) );
-    connect( packagesTableWidget, SIGNAL( itemSelectionChanged() ), this, SLOT( rpmsTableSelectionChanged() ) );
-    connect( profilesTableWidget, SIGNAL( itemSelectionChanged() ), this, SLOT( profilesTableWidgetSelectionChanged() ) );
+    connect( m_profilesTableWidget, SIGNAL( currentCellChanged( int, int, int, int ) ), this, SLOT( clearAndInsertPackagesTable( int, int, int, int ) ) );
+    connect( m_profilesTableWidget, SIGNAL( cellDoubleClicked( int, int ) ), this, SLOT( profileDoubleClicked( int, int ) ) );
+    connect( m_packagesTableWidget, SIGNAL( cellDoubleClicked( int, int ) ), this, SLOT( packageDoubleClicked( int, int ) ) );
+    connect( m_packagesTableWidget, SIGNAL( itemSelectionChanged() ), this, SLOT( rpmsTableSelectionChanged() ) );
+    connect( m_profilesTableWidget, SIGNAL( itemSelectionChanged() ), this, SLOT( profilesTableWidgetSelectionChanged() ) );
 
     // connect content downloader signals
-    connect( plainContentDownloader, SIGNAL( finished( int, bool ) ), this, SLOT( contentDownloaderFinished( int, bool ) ) );
-    connect( yumContentDownloader, SIGNAL( finished( int, bool ) ), this, SLOT( contentDownloaderFinished( int, bool ) ) );
+    connect( m_plainContentDownloader, SIGNAL( finished( int, bool ) ), this, SLOT( contentDownloaderFinished( int, bool ) ) );
+    connect( m_yumContentDownloader, SIGNAL( finished( int, bool ) ), this, SLOT( contentDownloaderFinished( int, bool ) ) );
 
-    connect( updateTimer, SIGNAL( timeout() ), this, SLOT( completeStatusUpdate() ) );
+    connect( m_updateTimer, SIGNAL( timeout() ), this, SLOT( completeStatusUpdate() ) );
 
-    updateTimer->start( rpmDownloaderSettings().updateInterval() );
+    m_updateTimer->start( rpmDownloaderSettings().updateInterval() );
 }
 
 void RpmDownloaderWidget::addActionToPackagesTable( QAction * action )
 {
-    packagesTableWidget->addAction( action );
+    m_packagesTableWidget->addAction( action );
 }
 
 void RpmDownloaderWidget::addActionToProfilesTable( QAction * action )
 {
-    profilesTableWidget->addAction( action );
+    m_profilesTableWidget->addAction( action );
 }
 
 QAction * RpmDownloaderWidget::addSeparatorToPackagesTable()
 {
     QAction *separatorAction = new QAction( this );
     separatorAction->setSeparator( true );
-    packagesTableWidget->addAction( separatorAction );
+    m_packagesTableWidget->addAction( separatorAction );
     return separatorAction;
 }
 
@@ -103,65 +103,65 @@ QAction * RpmDownloaderWidget::addSeparatorToProfilesTable()
 {
     QAction *separatorAction = new QAction( this );
     separatorAction->setSeparator( true );
-    profilesTableWidget->addAction( separatorAction );
+    m_profilesTableWidget->addAction( separatorAction );
     return separatorAction;
 }
 
 void RpmDownloaderWidget::clearPackagesTable()
 {
-    packagesTableWidget->clear();
-    packagesTableWidget->setRowCount( 0 );
-    packagesTableWidget->setColumnCount( 0 );
-    packagesTableWidget->setColumnCount( PackageColumns );
+    m_packagesTableWidget->clear();
+    m_packagesTableWidget->setRowCount( 0 );
+    m_packagesTableWidget->setColumnCount( 0 );
+    m_packagesTableWidget->setColumnCount( PackageColumns );
 
-    packagesTableWidget->setHorizontalHeaderLabels( QStringList()
+    m_packagesTableWidget->setHorizontalHeaderLabels( QStringList()
             << tr( "Download Status" )
             << tr( "RPM Name" )
             << tr( "Local Version" )
             << tr( "Available Version" ) );
 
     // add column size policy
-    packagesTableWidget->resizeColumnsToContents();
+    m_packagesTableWidget->resizeColumnsToContents();
     // rpmsTableWidget->horizontalHeader()->setResizeMode(1, QHeaderView::Stretch);
-    packagesTableWidget->horizontalHeader()->setStretchLastSection( true );
-    packagesTableWidget->horizontalHeader()->resizeSection( 1, 100 );
-    packagesTableWidget->horizontalHeader()->resizeSection( 2, 120 );
-    packagesTableWidget->horizontalHeader()->setHighlightSections( false );
-    packagesTableWidget->setAlternatingRowColors( true );
+    m_packagesTableWidget->horizontalHeader()->setStretchLastSection( true );
+    m_packagesTableWidget->horizontalHeader()->resizeSection( 1, 100 );
+    m_packagesTableWidget->horizontalHeader()->resizeSection( 2, 120 );
+    m_packagesTableWidget->horizontalHeader()->setHighlightSections( false );
+    m_packagesTableWidget->setAlternatingRowColors( true );
 
-    packagesTableWidget->setSelectionBehavior( QAbstractItemView::SelectRows );
+    m_packagesTableWidget->setSelectionBehavior( QAbstractItemView::SelectRows );
 }
 
 void RpmDownloaderWidget::clearProfilesTable()
 {
-    profilesTableWidget->clear();
-    profilesTableWidget->setRowCount( 0 );
-    profilesTableWidget->setColumnCount( 0 );
-    profilesTableWidget->setColumnCount( ProfileColumns );
+    m_profilesTableWidget->clear();
+    m_profilesTableWidget->setRowCount( 0 );
+    m_profilesTableWidget->setColumnCount( 0 );
+    m_profilesTableWidget->setColumnCount( ProfileColumns );
 
-    profilesTableWidget->setHorizontalHeaderLabels( QStringList()
+    m_profilesTableWidget->setHorizontalHeaderLabels( QStringList()
             << tr( "Status" )
             << tr( "Profile Name" ) );
 
     // add coloumn size policy
-    profilesTableWidget->resizeColumnsToContents();
-    profilesTableWidget->horizontalHeader()->setSectionResizeMode( 1, QHeaderView::Stretch );
-    profilesTableWidget->horizontalHeader()->setHighlightSections( false );
-    profilesTableWidget->setAlternatingRowColors( true );
+    m_profilesTableWidget->resizeColumnsToContents();
+    m_profilesTableWidget->horizontalHeader()->setSectionResizeMode( 1, QHeaderView::Stretch );
+    m_profilesTableWidget->horizontalHeader()->setHighlightSections( false );
+    m_profilesTableWidget->setAlternatingRowColors( true );
 
-    profilesTableWidget->setSelectionBehavior( QAbstractItemView::SelectRows );
-    profilesTableWidget->setSelectionMode( QAbstractItemView::SingleSelection );
+    m_profilesTableWidget->setSelectionBehavior( QAbstractItemView::SelectRows );
+    m_profilesTableWidget->setSelectionMode( QAbstractItemView::SingleSelection );
 
     QList<RepositoryProfile *>::iterator profileIter;
 
-    for ( profileIter = profiles.begin(); profileIter != profiles.end(); ++profileIter ) {
+    for ( profileIter = m_profiles.begin(); profileIter != m_profiles.end(); ++profileIter ) {
         disconnect(( *profileIter ) );
     }
 
     // clear all profiles
-    qDeleteAll( profiles.begin(), profiles.end() );  // delete explicit all elements in the list
+    qDeleteAll( m_profiles.begin(), m_profiles.end() );  // delete explicit all elements in the list
 
-    profiles.clear();
+    m_profiles.clear();
 }
 
 void RpmDownloaderWidget::clearAll()
@@ -177,7 +177,7 @@ void RpmDownloaderWidget::clearAll()
 
 void RpmDownloaderWidget::addProfile( RepositoryProfile *newProfile )
 {
-    int row = profilesTableWidget->rowCount();
+    int row = m_profilesTableWidget->rowCount();
 
     newProfile->setParent( this );
 
@@ -199,13 +199,13 @@ void RpmDownloaderWidget::addProfile( RepositoryProfile *newProfile )
     statusItem->setIcon( QIcon( ":/images/unknown.png" ) );
 
     // insert a new row
-    profilesTableWidget->setRowCount( row + 1 );
-    profilesTableWidget->setItem( row, 0, statusItem );
-    profilesTableWidget->setItem( row, 1, profileNameItem );
-    profiles.push_back( newProfile );
+    m_profilesTableWidget->setRowCount( row + 1 );
+    m_profilesTableWidget->setItem( row, 0, statusItem );
+    m_profilesTableWidget->setItem( row, 1, profileNameItem );
+    m_profiles.push_back( newProfile );
 
     // set new item as selected
-    profilesTableWidget->setCurrentCell( row, 1 );
+    m_profilesTableWidget->setCurrentCell( row, 1 );
 
     connect( newProfile, SIGNAL( statusRefreshed() ), this, SLOT( repositoryStatusUpdated() ) );
     emit( modified() );
@@ -215,14 +215,14 @@ void RpmDownloaderWidget::addProfile( RepositoryProfile *newProfile )
 
 void RpmDownloaderWidget::duplicateCurrentProfile()
 {
-    int row = profilesTableWidget->currentRow();
+    int row = m_profilesTableWidget->currentRow();
 
     if ( row < 0 )
         return;
 
     RepositoryProfile *duplicatedProfile = new RepositoryProfile( this );
 
-    QHash<QString, Package> packages = profiles.at( row )->selectedPackages();
+    QHash<QString, Package> packages = m_profiles.at( row )->selectedPackages();
 
     QHash<QString, Package>::const_iterator packageIter;
 
@@ -230,12 +230,12 @@ void RpmDownloaderWidget::duplicateCurrentProfile()
         duplicatedProfile->addPackage( packageIter.value() );
     }
 
-    duplicatedProfile->setArchitectures( profiles.at( row )->architecures() );
+    duplicatedProfile->setArchitectures( m_profiles.at( row )->architecures() );
 
-    duplicatedProfile->setDownloadDir( profiles.at( row )->downloadDir() );
-    duplicatedProfile->setProfileName( profiles.at( row )->profileName(), false );   // don't rename directory
-    duplicatedProfile->setServerUrl( profiles.at( row )->serverUrl() );
-    duplicatedProfile->setRepoType( profiles.at( row )->repoType() );
+    duplicatedProfile->setDownloadDir( m_profiles.at( row )->downloadDir() );
+    duplicatedProfile->setProfileName( m_profiles.at( row )->profileName(), false );   // don't rename directory
+    duplicatedProfile->setServerUrl( m_profiles.at( row )->serverUrl() );
+    duplicatedProfile->setRepoType( m_profiles.at( row )->repoType() );
 
     duplicatedProfile->clearStatus();
     addProfile( duplicatedProfile );
@@ -243,9 +243,9 @@ void RpmDownloaderWidget::duplicateCurrentProfile()
 
 void RpmDownloaderWidget::profileForCurrentProfileChanged()
 {
-    int row = profilesTableWidget->currentRow();
+    int row = m_profilesTableWidget->currentRow();
 
-    if ( currentUpdatedProfile == row ) { // interrupt udapte when profile changed
+    if ( m_currentUpdatedProfile == row ) { // interrupt udapte when profile changed
         cancelStatusUpdate();
     }
 
@@ -253,9 +253,9 @@ void RpmDownloaderWidget::profileForCurrentProfileChanged()
         return;
 
 
-    profiles[row]->clearStatus();
+    m_profiles[row]->clearStatus();
 
-    profilesTableWidget->item( row, 1 )->setText( profiles.at( row )->profileName() );
+    m_profilesTableWidget->item( row, 1 )->setText( m_profiles.at( row )->profileName() );
 
     updateProfileTableStatus();
 
@@ -266,31 +266,31 @@ void RpmDownloaderWidget::profileForCurrentProfileChanged()
 
 void RpmDownloaderWidget::deleteCurrentItemsFromActiveTable()
 {
-    int row = profilesTableWidget->currentRow();
+    int row = m_profilesTableWidget->currentRow();
 
-    if ( profilesTableWidget->hasFocus() && row >= 0 ) {
+    if ( m_profilesTableWidget->hasFocus() && row >= 0 ) {
         // delete current profile
-        if ( !confirmProfileDelete( profiles.at( row )->profileName() ) )   // to avoid removing profiles by mistake
+        if ( !confirmProfileDelete( m_profiles.at( row )->profileName() ) )   // to avoid removing profiles by mistake
             return;
 
-        if ( currentUpdatedProfile == row ) {
+        if ( m_currentUpdatedProfile == row ) {
             cancelStatusUpdate();
 
-        } else if ( currentUpdatedProfile > row ) {
-            --currentUpdatedProfile;
+        } else if ( m_currentUpdatedProfile > row ) {
+            --m_currentUpdatedProfile;
 
-            if ( profiles.at( currentUpdatedProfile )->repoType() == YUM )  // correct profile number
-                yumContentDownloader->changeCurrentProfileNumber( currentUpdatedProfile );
+            if ( m_profiles.at( m_currentUpdatedProfile )->repoType() == YUM )  // correct profile number
+                m_yumContentDownloader->changeCurrentProfileNumber( m_currentUpdatedProfile );
             else
-                plainContentDownloader->changeCurrentProfileNumber( currentUpdatedProfile );
+                m_plainContentDownloader->changeCurrentProfileNumber( m_currentUpdatedProfile );
         }
 
         // RDDatabaseHandler::removeDbConnection(profiles.at(row)->profileName());
 
-        profilesTableWidget->removeRow( row );
+        m_profilesTableWidget->removeRow( row );
 
         // disconenct signals and destroy object
-        RepositoryProfile *profile = profiles.at( row );
+        RepositoryProfile *profile = m_profiles.at( row );
 
         disconnect( profile );
 
@@ -299,13 +299,13 @@ void RpmDownloaderWidget::deleteCurrentItemsFromActiveTable()
         delete profile;
 
         // remove profile from list
-        profiles.removeAt( row );
+        m_profiles.removeAt( row );
 
         // select current row
-        if ( row > 0 && row < profilesTableWidget->rowCount() )
-            profilesTableWidget->setCurrentCell( row, 1 );
+        if ( row > 0 && row < m_profilesTableWidget->rowCount() )
+            m_profilesTableWidget->setCurrentCell( row, 1 );
         else if ( row > 0 ) // removed row was last row
-            profilesTableWidget->setCurrentCell( row - 1, 1 );
+            m_profilesTableWidget->setCurrentCell( row - 1, 1 );
         else {
             emit( gotProfiles( false ) );
             clearPackagesTable();
@@ -315,13 +315,13 @@ void RpmDownloaderWidget::deleteCurrentItemsFromActiveTable()
 
         checkForPackagesInAllProfiles();
         
-        clearAndInsertPackagesTable(profilesTableWidget->currentRow(), -1, -1, -1);
+        clearAndInsertPackagesTable(m_profilesTableWidget->currentRow(), -1, -1, -1);
         profilesTableWidgetSelectionChanged();
 
-    } else if ( packagesTableWidget->hasFocus() && row >= 0 ) {
-        QList<QTableWidgetItem *> selectedPackageItems = packagesTableWidget->selectedItems();
+    } else if ( m_packagesTableWidget->hasFocus() && row >= 0 ) {
+        QList<QTableWidgetItem *> selectedPackageItems = m_packagesTableWidget->selectedItems();
 
-        int packageRow = packagesTableWidget->currentRow();
+        int packageRow = m_packagesTableWidget->currentRow();
 
         if ( packageRow < 0 ) // nothing selected
             return;
@@ -331,7 +331,7 @@ void RpmDownloaderWidget::deleteCurrentItemsFromActiveTable()
         foreach( QTableWidgetItem *item, selectedPackageItems ) {
             if ( item->column() == 1 ) {
                 int selectedRow = item->row();
-                profiles[row]->removePackage( packagesTableWidget->item( selectedRow, 1 )->text() );
+                m_profiles[row]->removePackage( m_packagesTableWidget->item( selectedRow, 1 )->text() );
                 rowsToDelete.push_back( selectedRow );  // mark for delete
             }
         }
@@ -341,15 +341,15 @@ void RpmDownloaderWidget::deleteCurrentItemsFromActiveTable()
         // now delete uneeded rows
 
         for ( int i = 0; i < rowsToDelete.size(); ++i ) {
-            packagesTableWidget->removeRow( rowsToDelete.at( i ) - i );
+            m_packagesTableWidget->removeRow( rowsToDelete.at( i ) - i );
         }
 
-        if ( packageRow >= 0 && packageRow < packagesTableWidget->rowCount() )
-            packagesTableWidget->setCurrentCell( packageRow, 1 );
+        if ( packageRow >= 0 && packageRow < m_packagesTableWidget->rowCount() )
+            m_packagesTableWidget->setCurrentCell( packageRow, 1 );
         else if ( packageRow > 0 ) // removed row was last row
-            packagesTableWidget->setCurrentCell( packageRow - rowsToDelete.size(), 1 );
+            m_packagesTableWidget->setCurrentCell( packageRow - rowsToDelete.size(), 1 );
 
-        profiles[row]->computeProfileStatus();
+        m_profiles[row]->computeProfileStatus();
 
         // update profile status display
         updateProfileTableStatus();
@@ -384,12 +384,12 @@ void RpmDownloaderWidget::deleteSelectedPackagesFromDisk()
 {
     QApplication::setOverrideCursor( Qt::BusyCursor );
 
-    int row = profilesTableWidget->currentRow();
+    int row = m_profilesTableWidget->currentRow();
 
     if ( row < 0 ) // no profile selceted
         return;
 
-    QList<QTableWidgetItem *> selectedPackageItems = packagesTableWidget->selectedItems();
+    QList<QTableWidgetItem *> selectedPackageItems = m_packagesTableWidget->selectedItems();
 
     QProgressDialog progress( tr( "removing packages please wait ..." ), tr( "Abort" ), 0, selectedPackageItems.size() / 4.0, this );    // always four per column represents one package
 
@@ -405,13 +405,13 @@ void RpmDownloaderWidget::deleteSelectedPackagesFromDisk()
                 break;
             }
 
-            profiles[row]->deletePackageFromDisk( item->text() );
+            m_profiles[row]->deletePackageFromDisk( item->text() );
 
             progress.setValue( ++packageCounter );
         }
     }
 
-    profiles[row]->computeProfileStatus(); // only compute once
+    m_profiles[row]->computeProfileStatus(); // only compute once
 
     updatePackagesTable();
     updateProfileTableStatus();
@@ -424,17 +424,17 @@ void RpmDownloaderWidget::deleteAllPackagesFromDisk()
 {
     QApplication::setOverrideCursor( Qt::BusyCursor );
 
-    QProgressDialog progress( tr( "removing packages please wait ..." ), tr( "Abort" ), 0, profiles.size(), this );
+    QProgressDialog progress( tr( "removing packages please wait ..." ), tr( "Abort" ), 0, m_profiles.size(), this );
     progress.setWindowModality( Qt::WindowModal );
 
-    for ( int i = 0; i < profiles.size(); ++i ) {
+    for ( int i = 0; i < m_profiles.size(); ++i ) {
         qApp->processEvents();
 
         if ( progress.wasCanceled() ) {
             break;
         }
 
-        profiles[i]->deleteAllPackagesFromDisk();
+        m_profiles[i]->deleteAllPackagesFromDisk();
 
         progress.setValue( i + 1 );
     }
@@ -450,7 +450,7 @@ void RpmDownloaderWidget::copySelectedPackages()
 {
     QString str;
 
-    QList<QTableWidgetItem *> selectedPackageItems = packagesTableWidget->selectedItems();
+    QList<QTableWidgetItem *> selectedPackageItems = m_packagesTableWidget->selectedItems();
     bool firstItem = true;
 
     QList<QTableWidgetItem *>::const_iterator itemsIter;
@@ -493,22 +493,22 @@ void RpmDownloaderWidget::insertPackagesFromClipboard()
 
 void RpmDownloaderWidget::profileDebugOutput()
 {
-    for ( int i = 0; i < profiles.size(); ++i ) {
-        qDebug( "Profile at %i name %s", i, qPrintable( profiles.at( i )->profileName() ) );
+    for ( int i = 0; i < m_profiles.size(); ++i ) {
+        qDebug( "Profile at %i name %s", i, qPrintable( m_profiles.at( i )->profileName() ) );
     }
 }
 
 void RpmDownloaderWidget::addPackageToCurProfileWithDeps( const Package & package )
 {
-    if ( profilesTableWidget->rowCount() <= 0 ) // nothing to do
+    if ( m_profilesTableWidget->rowCount() <= 0 ) // nothing to do
         return;
 
-    int row = profilesTableWidget->currentRow();
+    int row = m_profilesTableWidget->currentRow();
 
     if ( row < 0 ) // should not happen
         return;
 
-    if ( !profiles.at( row )->repoType() == YUM || currentUpdatedProfile == row ) {
+    if ( !m_profiles.at( row )->repoType() == YUM || m_currentUpdatedProfile == row ) {
         // only yum can resolve deps
         // or database is incomplete because it's currently updated then
         // add rpm as normal
@@ -527,7 +527,7 @@ void RpmDownloaderWidget::addPackageToCurProfileWithDeps( const Package & packag
 
     YumDepSolver depSolver;
 
-    if ( !depSolver.resolveSatFor( package.packageName(), rpmDownloaderSettings().cacheDir().absolutePath() + "/" + profiles.at( row )->profileName() + " " + profiles.at( row )->profileName() + ".db", profiles.at( row )->profileName(), progress, profiles.at( row )->architecures(), rpmDownloaderSettings().useMemDbSatSolving() ) ) {
+    if ( !depSolver.resolveSatFor( package.packageName(), rpmDownloaderSettings().cacheDir().absolutePath() + "/" + m_profiles.at( row )->profileName() + " " + m_profiles.at( row )->profileName() + ".db", m_profiles.at( row )->profileName(), progress, m_profiles.at( row )->architecures(), rpmDownloaderSettings().useMemDbSatSolving() ) ) {
         // could not resolve deps
         // unbusy
         QApplication::restoreOverrideCursor();
@@ -554,29 +554,29 @@ void RpmDownloaderWidget::addPackageToCurProfileWithDeps( const Package & packag
 
 void RpmDownloaderWidget::addPackageToCurProfile( const Package & package )
 {
-    if ( profilesTableWidget->rowCount() <= 0 ) // nothing to do
+    if ( m_profilesTableWidget->rowCount() <= 0 ) // nothing to do
         return;
 
-    int row = profilesTableWidget->currentRow();
+    int row = m_profilesTableWidget->currentRow();
 
     if ( row < 0 ) // should not happen
         return;
 
-    if ( profiles.at( row )->hasPackage( package.packageName() ) )
+    if ( m_profiles.at( row )->hasPackage( package.packageName() ) )
         return;
 
-    if ( profiles.at( row )->numberOfSelectedPackages() + 1 > MaxRows ) {
+    if ( m_profiles.at( row )->numberOfSelectedPackages() + 1 > MaxRows ) {
         // no more packages accepted
         qDebug( "maximum number of packages reached" );
         return;
     }
 
-    profiles[row]->addPackage( package );
+    m_profiles[row]->addPackage( package );
 
     // apply filter if needed
 
-    if ( !lastFilterString.isEmpty() )
-        applyPackageFilter( lastFilterString );
+    if ( !m_lastFilterString.isEmpty() )
+        applyPackageFilter( m_lastFilterString );
     else
         addPackageToPackagesTableWidget( package.packageName() );
 
@@ -595,9 +595,9 @@ void RpmDownloaderWidget::addPackageToCurProfile( const Package & package )
 
 void RpmDownloaderWidget::addPackageToPackagesTableWidget( const QString& packageName )
 {
-    int packageRow = packagesTableWidget->rowCount();
+    int packageRow = m_packagesTableWidget->rowCount();
 
-    packagesTableWidget->setRowCount( packageRow + 1 );
+    m_packagesTableWidget->setRowCount( packageRow + 1 );
 
     // add items
 
@@ -610,7 +610,7 @@ void RpmDownloaderWidget::addPackageToPackagesTableWidget( const QString& packag
         addItemToPackagesTableWidget( item, packageRow, i );
     }
 
-    packagesTableWidget->setCurrentCell( packageRow, 1 );
+    m_packagesTableWidget->setCurrentCell( packageRow, 1 );
 
 }
 
@@ -619,28 +619,28 @@ void RpmDownloaderWidget::addItemToPackagesTableWidget( QTableWidgetItem* item, 
     // items not editable
     item->setFlags( item->flags() &~ Qt::ItemIsEditable );
     item->setFlags( item->flags() &~ Qt::ItemIsEditable );
-    packagesTableWidget->setItem( row, column, item );
+    m_packagesTableWidget->setItem( row, column, item );
 }
 
 void RpmDownloaderWidget::applyPackageFilter( const QString& filterText )
 {
     clearPackagesTable();
-    lastFilterString = filterText;
-    int row = profilesTableWidget->currentRow();
+    m_lastFilterString = filterText;
+    int row = m_profilesTableWidget->currentRow();
 
     if ( row < 0 ) // nothing to do
         return;
 
     QApplication::setOverrideCursor( Qt::BusyCursor );
 
-    QStringList packageNames = profiles.at( row )->selectedPackages().keys();
+    QStringList packageNames = m_profiles.at( row )->selectedPackages().keys();
 
     QStringList::const_iterator packageNamesIter;
 
     const QStringList::const_iterator end = packageNames.end();
 
     for ( packageNamesIter = packageNames.begin(); packageNamesIter != end; ++packageNamesIter ) {
-        if ( lastFilterString.isEmpty() || packageNamesIter->startsWith( lastFilterString ) ) {  // add package
+        if ( m_lastFilterString.isEmpty() || packageNamesIter->startsWith( m_lastFilterString ) ) {  // add package
             addPackageToPackagesTableWidget( *packageNamesIter );
         }
     }
@@ -653,9 +653,9 @@ void RpmDownloaderWidget::applyPackageFilter( const QString& filterText )
 
 void RpmDownloaderWidget::resolveDependenciesForCurrentSelectedPackage()
 {
-    QList<QTableWidgetItem *> selectedItems = packagesTableWidget->selectedItems();
+    QList<QTableWidgetItem *> selectedItems = m_packagesTableWidget->selectedItems();
 
-    if ( packagesTableWidget->rowCount() <= 0 || selectedItems.size() != 4 ) // not exactly one row selected
+    if ( m_packagesTableWidget->rowCount() <= 0 || selectedItems.size() != 4 ) // not exactly one row selected
         return;
 
     QListIterator<QTableWidgetItem *> i( selectedItems );
@@ -704,24 +704,24 @@ QIcon RpmDownloaderWidget::iconForStatus( Status status )
 
 void RpmDownloaderWidget::updatePackagesTable()
 {
-    int row = profilesTableWidget->currentRow();
+    int row = m_profilesTableWidget->currentRow();
 
     if ( row < 0 )
         return;
 
-    if ( !loading )
+    if ( !m_loading )
         QApplication::setOverrideCursor( Qt::BusyCursor );
 
-    for ( int i = 0; i < packagesTableWidget->rowCount(); ++i ) {
-        QTableWidgetItem *packageNameItem = packagesTableWidget->item( i, 1 );
-        PackageVersions localVersions = profiles.at( row )->getLocalPackageVersions( packageNameItem->text() );
-        PackageVersions remoteVersions = profiles.at( row )->getRemotePackageVersions( packageNameItem->text() );
+    for ( int i = 0; i < m_packagesTableWidget->rowCount(); ++i ) {
+        QTableWidgetItem *packageNameItem = m_packagesTableWidget->item( i, 1 );
+        PackageVersions localVersions = m_profiles.at( row )->getLocalPackageVersions( packageNameItem->text() );
+        PackageVersions remoteVersions = m_profiles.at( row )->getRemotePackageVersions( packageNameItem->text() );
 
         for ( int j = 0; j < PackageColumns; ++j ) {
-            QTableWidgetItem *item = packagesTableWidget->item( i, j );
+            QTableWidgetItem *item = m_packagesTableWidget->item( i, j );
 
             if ( j == 0 ) {
-                item->setIcon( iconForStatus( profiles.at( row )->getPackageStatus( packageNameItem->text() ) ) );
+                item->setIcon( iconForStatus( m_profiles.at( row )->getPackageStatus( packageNameItem->text() ) ) );
 
             } else if ( j == 2 ) {
                 item->setText( formatPackageVersionsForDisplay( localVersions ) );
@@ -734,7 +734,7 @@ void RpmDownloaderWidget::updatePackagesTable()
         }
     }
 
-    if ( !loading )
+    if ( !m_loading )
         QApplication::restoreOverrideCursor();
 }
 
@@ -786,9 +786,9 @@ QString RpmDownloaderWidget::formatPackageVersionsForDisplay( const PackageVersi
 
 void RpmDownloaderWidget::updateProfileTableStatus()
 {
-    for ( int i = 0; i < profiles.size(); ++i ) {
+    for ( int i = 0; i < m_profiles.size(); ++i ) {
         // profiles[i]->computeProfileStatus(); // compute overall status
-        profilesTableWidget->item( i, 0 )->setIcon( iconForStatus( profiles.at( i )->profileStatus() ) );
+        m_profilesTableWidget->item( i, 0 )->setIcon( iconForStatus( m_profiles.at( i )->profileStatus() ) );
     }
 }
 
@@ -805,15 +805,15 @@ void RpmDownloaderWidget::clearAndInsertPackagesTable( int row, int column, int 
 
     clearPackagesTable();
 
-    QStringList packageNames = profiles.at( row )->selectedPackages().keys();
+    QStringList packageNames = m_profiles.at( row )->selectedPackages().keys();
 
     if ( packageNames.size() >= MaxRows ) // error
         return;
 
-    if ( !loading )
+    if ( !m_loading )
         QApplication::setOverrideCursor( Qt::BusyCursor );
 
-    if ( lastFilterString.isEmpty() ) { // insert packages
+    if ( m_lastFilterString.isEmpty() ) { // insert packages
         QStringList::const_iterator packageNameIter;
 
         for ( packageNameIter = packageNames.begin(); packageNameIter != packageNames.end(); ++packageNameIter ) {
@@ -821,13 +821,13 @@ void RpmDownloaderWidget::clearAndInsertPackagesTable( int row, int column, int 
         }
 
     } else { // let the filter insert the packages
-        applyPackageFilter( lastFilterString );
+        applyPackageFilter( m_lastFilterString );
     }
 
-    if ( !loading )
+    if ( !m_loading )
         QApplication::restoreOverrideCursor();
 
-    packagesTableWidget->setCurrentCell( packagesTableWidget->rowCount() - 1, 1 );
+    m_packagesTableWidget->setCurrentCell( m_packagesTableWidget->rowCount() - 1, 1 );
 
     updatePackagesTable();
 }
@@ -835,13 +835,13 @@ void RpmDownloaderWidget::clearAndInsertPackagesTable( int row, int column, int 
 void RpmDownloaderWidget::profileDoubleClicked( int row, int column )
 {
     Q_UNUSED( column );
-    emit( repositoryProfileDoubleClicked( profiles.at( row ) ) );
+    emit( repositoryProfileDoubleClicked( m_profiles.at( row ) ) );
 }
 
 void RpmDownloaderWidget::packageDoubleClicked( int row, int column )
 {
     Q_UNUSED( column );
-    emit( packageDoubleClicked( packagesTableWidget->item( row, 1 )->text(), packagesTableWidget->currentRow() ) );
+    emit( packageDoubleClicked( m_packagesTableWidget->item( row, 1 )->text(), m_packagesTableWidget->currentRow() ) );
 }
 
 bool RpmDownloaderWidget::saveToFile( const QString & fileName )
@@ -865,28 +865,28 @@ bool RpmDownloaderWidget::saveToFile( const QString & fileName )
 
     QApplication::setOverrideCursor( Qt::WaitCursor );
 
-    for ( int i = 0; i < profiles.size(); ++i ) {
-        QHashIterator<QString, Package> packageIter( profiles.at( i )->selectedPackages() );
+    for ( int i = 0; i < m_profiles.size(); ++i ) {
+        QHashIterator<QString, Package> packageIter( m_profiles.at( i )->selectedPackages() );
         bool added = false;
 
         while ( packageIter.hasNext() ) {
             packageIter.next();
-            out << static_cast<quint16>( i ) << profiles.at( i )->profileName()
-            << profiles.at( i )->serverUrl().toString()
-            << profiles.at( i )->downloadDir()
-            << static_cast<quint16>( profiles.at( i )->architecures() )
-            << static_cast<quint16>( profiles.at( i )->repoType() )
+            out << static_cast<quint16>( i ) << m_profiles.at( i )->profileName()
+            << m_profiles.at( i )->serverUrl().toString()
+            << m_profiles.at( i )->downloadDir()
+            << static_cast<quint16>( m_profiles.at( i )->architecures() )
+            << static_cast<quint16>( m_profiles.at( i )->repoType() )
             << packageIter.value().packageName()
             << false; // its not a fake rpm
             added = true;
         }
 
         if ( !added ) { // force profile add
-            out << static_cast<quint16>( i ) << profiles.at( i )->profileName()
-            << profiles.at( i )->serverUrl().toString()
-            << profiles.at( i )->downloadDir()
-            << static_cast<quint16>( profiles.at( i )->architecures() )
-            << static_cast<quint16>( profiles.at( i )->repoType() )
+            out << static_cast<quint16>( i ) << m_profiles.at( i )->profileName()
+            << m_profiles.at( i )->serverUrl().toString()
+            << m_profiles.at( i )->downloadDir()
+            << static_cast<quint16>( m_profiles.at( i )->architecures() )
+            << static_cast<quint16>( m_profiles.at( i )->repoType() )
             << "Fake"
             << true;
         }
@@ -901,7 +901,7 @@ bool RpmDownloaderWidget::saveToFile( const QString & fileName )
 bool RpmDownloaderWidget::loadProfilesFile( const QString & fileName )
 {
     cancelStatusUpdate();
-    updateTimer->stop(); // stop timer
+    m_updateTimer->stop(); // stop timer
 
     QFile file( fileName );
 
@@ -937,7 +937,7 @@ bool RpmDownloaderWidget::loadProfilesFile( const QString & fileName )
     QString packageName;
     bool fakeRpm;
 
-    loading = true;
+    m_loading = true;
     QApplication::setOverrideCursor( Qt::WaitCursor );
 
     while ( !in.atEnd() ) {
@@ -953,7 +953,7 @@ bool RpmDownloaderWidget::loadProfilesFile( const QString & fileName )
 
         // qDebug("Profile size %i", profiles.size());
 
-        if ( pos == profiles.size() && !profileName.isEmpty() ) {
+        if ( pos == m_profiles.size() && !profileName.isEmpty() ) {
             RepositoryProfile *profile = new RepositoryProfile( this );
             profile->setProfileName( profileName, false );  // don't rename directory and database
             profile->setServerUrl( serverUrl );
@@ -971,10 +971,10 @@ bool RpmDownloaderWidget::loadProfilesFile( const QString & fileName )
 
     QApplication::restoreOverrideCursor();
 
-    loading = false;
+    m_loading = false;
 
     // completeRpmStatusUpdate();
-    updateTimer->start( 3000 );  // avoid signal race condition DON'T CALL completeRpmStatusUpdate without timer!!!
+    m_updateTimer->start( 3000 );  // avoid signal race condition DON'T CALL completeRpmStatusUpdate without timer!!!
     return true;
 }
 
@@ -985,34 +985,34 @@ RpmDownloaderWidget::~RpmDownloaderWidget()
 
 void RpmDownloaderWidget::completeStatusUpdate( bool showProgress )
 {
-    if ( profiles.size() < 1 ) // no profiles
+    if ( m_profiles.size() < 1 ) // no profiles
         return;
 
     if ( showProgress ) {
-        if ( !statusUpdateProgressDialog ) {
-            statusUpdateProgressDialog = new QProgressDialog( tr( "Status update in progress ..." ), tr( "Cancel" ), 0, profiles.size(), this );
-            connect( statusUpdateProgressDialog, SIGNAL( canceled() ), this, SLOT( cancelStatusUpdate() ) );
+        if ( !m_statusUpdateProgressDialog ) {
+            m_statusUpdateProgressDialog = new QProgressDialog( tr( "Status update in progress ..." ), tr( "Cancel" ), 0, m_profiles.size(), this );
+            connect( m_statusUpdateProgressDialog, SIGNAL( canceled() ), this, SLOT( cancelStatusUpdate() ) );
 
         } else {
-            statusUpdateProgressDialog->setMaximum( profiles.size() );
+            m_statusUpdateProgressDialog->setMaximum( m_profiles.size() );
         }
 
-        statusUpdateProgressDialog->setVisible( true );
+        m_statusUpdateProgressDialog->setVisible( true );
 
-        statusUpdateProgressDialog->setValue( 0 );
+        m_statusUpdateProgressDialog->setValue( 0 );
         QApplication::setOverrideCursor( Qt::BusyCursor );
         emit( isBusy( true ) );
     }
 
-    if ( updateTimer->isActive() ) // stop update timer when running
-        updateTimer->stop();
+    if ( m_updateTimer->isActive() ) // stop update timer when running
+        m_updateTimer->stop();
 
-    if ( currentUpdatedProfile >= 0 && showProgress ) {
-        statusUpdateProgressDialog->setValue( currentUpdatedProfile );
+    if ( m_currentUpdatedProfile >= 0 && showProgress ) {
+        m_statusUpdateProgressDialog->setValue( m_currentUpdatedProfile );
         return;
     }
 
-    currentUpdatedProfile = -1;
+    m_currentUpdatedProfile = -1;
 
     updateNextProfile();
 
@@ -1020,40 +1020,40 @@ void RpmDownloaderWidget::completeStatusUpdate( bool showProgress )
 
 void RpmDownloaderWidget::updateNextProfile()
 {
-    if ( currentUpdatedProfile + 1 < profiles.size() ) {
+    if ( m_currentUpdatedProfile + 1 < m_profiles.size() ) {
 
-        ++currentUpdatedProfile;
+        ++m_currentUpdatedProfile;
 
-        if ( statusUpdateProgressDialog ) {
-            if ( !statusUpdateProgressDialog->isHidden() )
-                statusUpdateProgressDialog->setValue( currentUpdatedProfile );  // not hidden
+        if ( m_statusUpdateProgressDialog ) {
+            if ( !m_statusUpdateProgressDialog->isHidden() )
+                m_statusUpdateProgressDialog->setValue( m_currentUpdatedProfile );  // not hidden
         }
 
         // initiate repository contents update
-        QString serverUrl = profiles.at( currentUpdatedProfile )->serverUrl().toString();
+        QString serverUrl = m_profiles.at( m_currentUpdatedProfile )->serverUrl().toString();
 
         // differnet update methods for different repository types
-        if ( profiles.at( currentUpdatedProfile )->repoType() == YUM ) {
+        if ( m_profiles.at( m_currentUpdatedProfile )->repoType() == YUM ) {
             // start yum content update
-            yumContentDownloader->startContentUpdate( currentUpdatedProfile, profiles.at( currentUpdatedProfile )->databaseFile(), profiles.at( currentUpdatedProfile )->profileName(), serverUrl, PackageMetaData::archStringList( profiles.at( currentUpdatedProfile )->architecures() ) );
+            m_yumContentDownloader->startContentUpdate( m_currentUpdatedProfile, m_profiles.at( m_currentUpdatedProfile )->databaseFile(), m_profiles.at( m_currentUpdatedProfile )->profileName(), serverUrl, PackageMetaData::archStringList( m_profiles.at( m_currentUpdatedProfile )->architecures() ) );
 
         } else {
-            plainContentDownloader->startContentUpdate( currentUpdatedProfile, profiles.at( currentUpdatedProfile )->databaseFile(), profiles.at( currentUpdatedProfile )->profileName(), serverUrl, PackageMetaData::archStringList( profiles.at( currentUpdatedProfile )->architecures() ) );
+            m_plainContentDownloader->startContentUpdate( m_currentUpdatedProfile, m_profiles.at( m_currentUpdatedProfile )->databaseFile(), m_profiles.at( m_currentUpdatedProfile )->profileName(), serverUrl, PackageMetaData::archStringList( m_profiles.at( m_currentUpdatedProfile )->architecures() ) );
         }
 
     } else {
-        if ( statusUpdateProgressDialog ) {
-            if ( !statusUpdateProgressDialog->isHidden() )
-                statusUpdateProgressDialog->setValue( currentUpdatedProfile + 1 );  // should hide now
+        if ( m_statusUpdateProgressDialog ) {
+            if ( !m_statusUpdateProgressDialog->isHidden() )
+                m_statusUpdateProgressDialog->setValue( m_currentUpdatedProfile + 1 );  // should hide now
 
             QApplication::restoreOverrideCursor(); // reset cursor
 
             emit( isBusy( false ) );
         }
 
-        currentUpdatedProfile = -1;
+        m_currentUpdatedProfile = -1;
 
-        updateTimer->start( rpmDownloaderSettings().updateInterval() );
+        m_updateTimer->start( rpmDownloaderSettings().updateInterval() );
     }
 }
 
@@ -1068,19 +1068,19 @@ void RpmDownloaderWidget::repositoryStatusUpdated()
 
 void RpmDownloaderWidget::changePackageName( const QString & oldName, const QString & newName, const int rpmsTableRow )
 {
-    profiles[profilesTableWidget->currentRow()]->changePackageName( oldName, newName );
-    packagesTableWidget->item( rpmsTableRow, 1 )->setText( newName );
+    m_profiles[m_profilesTableWidget->currentRow()]->changePackageName( oldName, newName );
+    m_packagesTableWidget->item( rpmsTableRow, 1 )->setText( newName );
     emit( modified() );
 }
 
 void RpmDownloaderWidget::changePackageName( const QString & oldName, const QString & newName )
 {
-    changePackageName( oldName, newName, packagesTableWidget->currentRow() );
+    changePackageName( oldName, newName, m_packagesTableWidget->currentRow() );
 }
 
 void RpmDownloaderWidget::contentDownloaderFinished( int profileNumber, bool error )
 {
-    if ( profileNumber != currentUpdatedProfile ) {
+    if ( profileNumber != m_currentUpdatedProfile ) {
         QMessageBox::critical( this, tr( "RPM Downloader" ),
                                tr( "Something went wrong, this should not happen but the updated profile doesn't match to the profile where contents was updated" ), QMessageBox::Ok | QMessageBox::Default );
         updateNextProfile();
@@ -1090,10 +1090,10 @@ void RpmDownloaderWidget::contentDownloaderFinished( int profileNumber, bool err
     if ( error ) {
         QString errMsg;
 
-        if ( profiles.at( profileNumber )->repoType() == YUM )
-            errMsg = yumContentDownloader->readError();
+        if ( m_profiles.at( profileNumber )->repoType() == YUM )
+            errMsg = m_yumContentDownloader->readError();
         else
-            errMsg = plainContentDownloader->readError();
+            errMsg = m_plainContentDownloader->readError();
 
         QMessageBox::critical( this, tr( "RPM Downloader" ),
                                tr( "Content update failed %1" ).arg( errMsg ), QMessageBox::Ok | QMessageBox::Default );
@@ -1103,8 +1103,8 @@ void RpmDownloaderWidget::contentDownloaderFinished( int profileNumber, bool err
         return;
     }
 
-    if ( profileNumber < profiles.size() && profileNumber >= 0 ) {
-        profiles[profileNumber]->refreshStatus();
+    if ( profileNumber < m_profiles.size() && profileNumber >= 0 ) {
+        m_profiles[profileNumber]->refreshStatus();
         updateNextProfile();
     }
 }
@@ -1121,9 +1121,9 @@ void RpmDownloaderWidget::downloadPackagesForAllProfiles()
 
 void RpmDownloaderWidget::downloadPackages( bool all )
 {
-    updateTimer->stop();
+    m_updateTimer->stop();
     DownloadProgressDialog dialog( this );
-    int row = profilesTableWidget->currentRow();
+    int row = m_profilesTableWidget->currentRow();
 
     if ( row < 0 ) {
         emit( downloadFinished() );
@@ -1133,10 +1133,10 @@ void RpmDownloaderWidget::downloadPackages( bool all )
     int numberOfRpms = computeNumberOfDownloadRpms( all );
 
     if ( all ) {
-        dialog.setProfilesForDownload( profiles );
+        dialog.setProfilesForDownload( m_profiles );
 
     } else {
-        dialog.setProfilesForDownload( profiles.at( row ) );
+        dialog.setProfilesForDownload( m_profiles.at( row ) );
     }
 
     if ( numberOfRpms <= 0 ) {
@@ -1157,12 +1157,12 @@ void RpmDownloaderWidget::downloadPackages( bool all )
         if ( all ) {
             QList<RepositoryProfile *>::iterator profileIter;
 
-            for ( profileIter = profiles.begin(); profileIter != profiles.end(); ++profileIter ) {
+            for ( profileIter = m_profiles.begin(); profileIter != m_profiles.end(); ++profileIter ) {
                 ( *profileIter )->packagesUpdated( rpmDownloaderSettings().deleteOldVersions() );
             }
 
         } else {
-            profiles[row]->packagesUpdated( rpmDownloaderSettings().deleteOldVersions() );
+            m_profiles[row]->packagesUpdated( rpmDownloaderSettings().deleteOldVersions() );
         }
     }
 
@@ -1178,17 +1178,17 @@ void RpmDownloaderWidget::downloadPackages( bool all )
 int RpmDownloaderWidget::computeNumberOfDownloadRpms( bool all )
 {
     if ( !all ) {
-        int row = profilesTableWidget->currentRow();
+        int row = m_profilesTableWidget->currentRow();
 
         if ( row < 0 )
             return 0;
 
-        return profiles.at( row )->numberOfPackagesToDownload();
+        return m_profiles.at( row )->numberOfPackagesToDownload();
 
     } else {
         int numberOfRpms = 0;
 
-        QListIterator<RepositoryProfile *> profileIter( profiles );
+        QListIterator<RepositoryProfile *> profileIter( m_profiles );
 
         while ( profileIter.hasNext() ) {
             numberOfRpms += profileIter.next()->numberOfPackagesToDownload();
@@ -1202,30 +1202,30 @@ int RpmDownloaderWidget::computeNumberOfDownloadRpms( bool all )
 
 void RpmDownloaderWidget::restartUpdateTimer()
 {
-    if ( updateTimer->isActive() )
-        updateTimer->stop();
+    if ( m_updateTimer->isActive() )
+        m_updateTimer->stop();
 
-    currentUpdatedProfile = -1;
+    m_currentUpdatedProfile = -1;
 
-    updateTimer->start( rpmDownloaderSettings().updateInterval() );
+    m_updateTimer->start( rpmDownloaderSettings().updateInterval() );
 }
 
 void RpmDownloaderWidget::cancelStatusUpdate()
 {
-    if ( statusUpdateProgressDialog ) {
-        if ( !statusUpdateProgressDialog->isHidden() )
-            statusUpdateProgressDialog->setValue( profiles.size() );
+    if ( m_statusUpdateProgressDialog ) {
+        if ( !m_statusUpdateProgressDialog->isHidden() )
+            m_statusUpdateProgressDialog->setValue( m_profiles.size() );
     }
 
-    if ( currentUpdatedProfile < 0 )
+    if ( m_currentUpdatedProfile < 0 )
         return; // no update in progress
 
-    if ( profiles.at( currentUpdatedProfile )->repoType() == YUM )
-        yumContentDownloader->cancelContentUpdate();
+    if ( m_profiles.at( m_currentUpdatedProfile )->repoType() == YUM )
+        m_yumContentDownloader->cancelContentUpdate();
     else
-        plainContentDownloader->cancelContentUpdate();
+        m_plainContentDownloader->cancelContentUpdate();
 
-    currentUpdatedProfile = -1;
+    m_currentUpdatedProfile = -1;
 
     restartUpdateTimer();
 
@@ -1236,9 +1236,9 @@ void RpmDownloaderWidget::cancelStatusUpdate()
 
 void RpmDownloaderWidget::rpmsTableSelectionChanged()
 {
-    if ( packagesTableWidget->selectedItems().size() > 4 ) // because one row has 4 items
+    if ( m_packagesTableWidget->selectedItems().size() > 4 ) // because one row has 4 items
         emit( hasPackageSelection( true, true ) );
-    else if ( packagesTableWidget->selectedItems().size() == 4 )
+    else if ( m_packagesTableWidget->selectedItems().size() == 4 )
         emit( hasPackageSelection( true, false ) );
     else
         emit( hasPackageSelection( false, false ) );
@@ -1246,10 +1246,10 @@ void RpmDownloaderWidget::rpmsTableSelectionChanged()
 
 void RpmDownloaderWidget::profilesTableWidgetSelectionChanged()
 {
-    if ( profilesTableWidget->selectedItems().size() > 0 ) {
+    if ( m_profilesTableWidget->selectedItems().size() > 0 ) {
         emit( hasProfileSelection( true ) );
 
-        if ( profiles.at( profilesTableWidget->currentRow() )->selectedPackages().size() > 0 ) {
+        if ( m_profiles.at( m_profilesTableWidget->currentRow() )->selectedPackages().size() > 0 ) {
             emit( currentProfileHasPackages( true ) );
 
         } else {
@@ -1266,39 +1266,39 @@ void RpmDownloaderWidget::applyNewSettings()
 {
     cancelStatusUpdate();
 
-    if ( updateTimer->isActive() ) {
-        updateTimer->stop();
-        updateTimer->start( rpmDownloaderSettings().updateInterval() );
+    if ( m_updateTimer->isActive() ) {
+        m_updateTimer->stop();
+        m_updateTimer->start( rpmDownloaderSettings().updateInterval() );
     }
 }
 
 QStringList RpmDownloaderWidget::getRepositoryContentsForCurrentRepo() const
 {
-    if ( profilesTableWidget->currentRow() >= 0 )
-        return profiles.at( profilesTableWidget->currentRow() )->getProvidedPackages();
+    if ( m_profilesTableWidget->currentRow() >= 0 )
+        return m_profiles.at( m_profilesTableWidget->currentRow() )->getProvidedPackages();
 
     return QStringList();
 }
 
 RepositoryProfile *RpmDownloaderWidget::getCurrentRepositoryProfile()
 {
-    if ( profilesTableWidget->currentRow() >= 0 )
-        return profiles.at( profilesTableWidget->currentRow() );
+    if ( m_profilesTableWidget->currentRow() >= 0 )
+        return m_profiles.at( m_profilesTableWidget->currentRow() );
 
     return NULL;
 }
 
 QString RpmDownloaderWidget::getCurrentPackageName() const
 {
-    if ( packagesTableWidget->currentRow() >= 0 )
-        return packagesTableWidget->item( packagesTableWidget->currentRow(), 1 ) ->text();
+    if ( m_packagesTableWidget->currentRow() >= 0 )
+        return m_packagesTableWidget->item( m_packagesTableWidget->currentRow(), 1 ) ->text();
 
     return QString();
 }
 
 void RpmDownloaderWidget::checkForPackagesInAllProfiles()
 {
-    int row = profilesTableWidget->currentRow();
+    int row = m_profilesTableWidget->currentRow();
 
     if ( row < 0 ) { // got no profiles
         emit( currentProfileHasPackages( false ) );
@@ -1308,17 +1308,17 @@ void RpmDownloaderWidget::checkForPackagesInAllProfiles()
 
     // check for rpms in the current profile
 
-    if ( profiles.at( row )->selectedPackages().size() < 1 ) {
+    if ( m_profiles.at( row )->selectedPackages().size() < 1 ) {
         emit( currentProfileHasPackages( false ) );
 
         // search for rpms in other profiles
         bool repositoriesHasPackagess = false;
 
-        for ( int i = 0; i < profiles.size(); ++i ) {
+        for ( int i = 0; i < m_profiles.size(); ++i ) {
             if ( i == row ) // no need to search act row
                 continue;
 
-            if ( profiles.at( i )->selectedPackages().size() > 0 ) {
+            if ( m_profiles.at( i )->selectedPackages().size() > 0 ) {
                 repositoriesHasPackagess = true;
                 break;
             }
@@ -1334,12 +1334,12 @@ void RpmDownloaderWidget::computeAndEmitStats()
 
     qint64 downloadSize = 0;
 
-    numberOfProfiles = profiles.size();
+    numberOfProfiles = m_profiles.size();
     numberOfRpms = okPackages = failedPackages = updatedPackages = localAvailPackages = availPackages = unknownPackages = 0;
 
     QList<RepositoryProfile *>::const_iterator profileIterator;
 
-    for ( profileIterator = profiles.begin(); profileIterator != profiles.end(); ++profileIterator ) {
+    for ( profileIterator = m_profiles.begin(); profileIterator != m_profiles.end(); ++profileIterator ) {
         numberOfRpms += ( *profileIterator )->numberOfSelectedPackages();
         okPackages += ( *profileIterator )->numberOfOkPackages();
         failedPackages += ( *profileIterator )->numberOfFailedPackages();
@@ -1365,12 +1365,12 @@ void RpmDownloaderWidget::triggerComputeStats()
 
 bool RpmDownloaderWidget::currentRepoSupportsDepSolving() const
 {
-    int row = profilesTableWidget->currentRow();
+    int row = m_profilesTableWidget->currentRow();
 
     if ( row < 0 )
         return false;
 
-    if ( profiles.at( row )->repoType() == YUM ) {
+    if ( m_profiles.at( row )->repoType() == YUM ) {
         return true;
     }
 
@@ -1379,7 +1379,7 @@ bool RpmDownloaderWidget::currentRepoSupportsDepSolving() const
 
 void RpmDownloaderWidget::prepareDetailsView()
 {
-    int row = profilesTableWidget->currentRow();
+    int row = m_profilesTableWidget->currentRow();
 
     if ( row < 0 )
         return;
@@ -1389,7 +1389,7 @@ void RpmDownloaderWidget::prepareDetailsView()
     if ( currentPackageName.isEmpty() )
         return;
 
-    emit( packageDetailsReady( profiles.at( row )->getPackageData( currentPackageName ), iconForStatus( profiles.at( row )->getPackageStatus( currentPackageName ) ) ) );
+    emit( packageDetailsReady( m_profiles.at( row )->getPackageData( currentPackageName ), iconForStatus( m_profiles.at( row )->getPackageStatus( currentPackageName ) ) ) );
 }
 
 void RpmDownloaderWidget::clearCacheDirectory()
@@ -1409,11 +1409,11 @@ void RpmDownloaderWidget::cleanOrphanedPackageEntries()
 {
     int removedOrphanedPackages = 0;
 
-    foreach( RepositoryProfile *profile, profiles ) {
+    foreach( RepositoryProfile *profile, m_profiles ) {
         removedOrphanedPackages += profile->cleanupOrphanedPackages();
     }
 
-    int row = profilesTableWidget->currentRow();
+    int row = m_profilesTableWidget->currentRow();
 
     if ( row < 1 )
         return;

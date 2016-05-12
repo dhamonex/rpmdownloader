@@ -136,22 +136,23 @@ class RpmDownloaderWidget : public QWidget
                PackageColumns = 4, ProfileColumns = 2, MaxRows = 999
          };
 
-        QTableWidget *profilesTableWidget;
-        QTableWidget *packagesTableWidget;
-        bool loading; // load profiles from file in progress
+        QTableWidget *m_profilesTableWidget;
+        QTableWidget *m_packagesTableWidget;
+        bool m_loading; // load profiles from file in progress
 
-        QList<RepositoryProfile*> profiles;
+        QList<RepositoryProfile*> m_profiles;
 
-        int currentUpdatedProfile;
-        QTimer *updateTimer;
+        int m_currentUpdatedProfile;
+        QTimer *m_updateTimer;
 
-        QProgressDialog *statusUpdateProgressDialog;
+        QProgressDialog *m_statusUpdateProgressDialog;
 
-        PlainRepositoryContentDownloader *plainContentDownloader;
-        YumRepositoryContentDownloader *yumContentDownloader;
+        PlainRepositoryContentDownloader *m_plainContentDownloader;
+        YumRepositoryContentDownloader *m_yumContentDownloader;
 
         // for filter need last filter
-        QString lastFilterString;
+        QString m_lastFilterString;
 };
 
 #endif
+
