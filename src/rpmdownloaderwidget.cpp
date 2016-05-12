@@ -270,8 +270,9 @@ void RpmDownloaderWidget::deleteCurrentItemsFromActiveTable()
 
   if ( m_profilesTableWidget->hasFocus() && row >= 0 ) {
     // delete current profile
-    if ( !confirmProfileDelete( m_profiles.at( row )->profileName() ) )   // to avoid removing profiles by mistake
+    if ( !confirmProfileDelete( m_profiles.at( row )->profileName() ) ) {   // to avoid removing profiles by mistake
       return;
+    }
 
     if ( m_currentUpdatedProfile == row ) {
       cancelStatusUpdate();

@@ -20,11 +20,11 @@
 #ifndef RDNAMESPACE_H
 #define RDNAMESPACE_H
 
-enum Status {UNKNOWN, OK, FAILED, AVAILABLE, UPDATE, LOCALAVAIL};
+enum Status { UNKNOWN, OK, FAILED, AVAILABLE, UPDATE, LOCALAVAIL };
 
 namespace RPM
 {
-  enum Architectures {UNDEFINED = 0x0000, i586 = 0x0001, i686 = 0x0002, x86_64 = 0x0004, noarch = 0x0008};
+  enum Architectures { UNDEFINED = 0x0000, i586 = 0x0001, i686 = 0x0002, x86_64 = 0x0004, noarch = 0x0008 };
 }
 
 #endif

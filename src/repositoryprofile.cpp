@@ -25,131 +25,131 @@
 #include <QtWidgets/QApplication>
 #include <QtCore/QSet>
 
-RepositoryProfile::RepositoryProfile ( QObject *parent )
-    : QObject ( parent ), curProfileName ( QApplication::translate ( "RepositoryProfile", "new profile" ) ),
-    curUrl ( "ftp://" ),
-    curDownloadDir ( QDir::current() ),
-    curArchitectures ( RPM::i586 ),
-    repositoryType ( YUM ),
-    status ( UNKNOWN )
+RepositoryProfile::RepositoryProfile( QObject *parent )
+  : QObject( parent ), m_curProfileName( QApplication::translate( "RepositoryProfile", "new profile" ) ),
+    m_curUrl( "ftp://" ),
+    m_curDownloadDir( QDir::current() ),
+    m_curArchitectures( RPM::x86_64 ),
+    m_repositoryType( YUM ),
+    m_status( UNKNOWN )
 {
   clearStats();
 
-  lister = new RDPackageListerThread ( this );
-  connect ( lister, SIGNAL ( finished() ), this, SLOT ( threadFinished() ) );
+  m_lister = new RDPackageListerThread( this );
+  connect( m_lister, SIGNAL( finished() ), this, SLOT( threadFinished() ) );
 }
 
 
 RepositoryProfile::~RepositoryProfile()
 {
   // remove existing db connection
-  RDDatabaseHandler::removeDbConnection ( curProfileName );
+  RDDatabaseHandler::removeDbConnection( m_curProfileName );
 }
 
 void RepositoryProfile::clearStats()
 {
-  okPackages = 0;
-  availPackages = 0;
-  updatedPackages = 0;
-  failedPackages = 0;
-  localAvailPackages = 0;
-  unknownPackages = 0;
-  requiredDownlodSize = -1; // indicates is unknown
+  m_okPackages = 0;
+  m_availPackages = 0;
+  m_updatedPackages = 0;
+  m_failedPackages = 0;
+  m_localAvailPackages = 0;
+  m_unknownPackages = 0;
+  m_requiredDownlodSize = -1; // indicates is unknown
 }
 
-void RepositoryProfile::setServerUrl ( const QUrl & newUrl )
+void RepositoryProfile::setServerUrl( const QUrl &newUrl )
 {
-  curUrl = newUrl;
+  m_curUrl = newUrl;
 }
 
-void RepositoryProfile::setServerUrl ( const QString & newUrl )
+void RepositoryProfile::setServerUrl( const QString &newUrl )
 {
-  setServerUrl ( QUrl ( newUrl ) );
+  setServerUrl( QUrl( newUrl ) );
 }
 
 QString RepositoryProfile::downloadDir() const
 {
-  return curDownloadDir.path();
+  return m_curDownloadDir.path();
 }
 
-void RepositoryProfile::setDownloadDir ( const QString & newDownloadDir )
+void RepositoryProfile::setDownloadDir( const QString &newDownloadDir )
 {
-  curDownloadDir = QDir ( newDownloadDir );
+  m_curDownloadDir = QDir( newDownloadDir );
 }
 
-void RepositoryProfile::setRepoType ( RepositoryType type )
+void RepositoryProfile::setRepoType( RepositoryType type )
 {
-  repositoryType = type;
+  m_repositoryType = type;
 }
 
-void RepositoryProfile::setArchitectures ( const RPM::Architectures newArchitectures )
+void RepositoryProfile::setArchitectures( const RPM::Architectures newArchitectures )
 {
-  curArchitectures = newArchitectures;
+  m_curArchitectures = newArchitectures;
 
   // update all package types
-  foreach ( const QString &package, packages.keys() ) {
-    packages[package].setArchitectures ( PackageMetaData::archStringList ( curArchitectures ) );
+  foreach ( const QString & package, m_packages.keys() ) {
+    m_packages[package].setArchitectures( PackageMetaData::archStringList( m_curArchitectures ) );
   }
 }
 
-void RepositoryProfile::setProfileName ( const QString & newProfileName, bool renameDirectory )
+void RepositoryProfile::setProfileName( const QString &newProfileName, bool renameDirectory )
 {
-  if ( curProfileName == newProfileName ) // nothing to do
+  if ( m_curProfileName == newProfileName ) // nothing to do
     return;
 
   // should therminate thread because it is using the current database connection
   // and restart it after changing the repository name
   bool restartLister = false;
 
-  if ( lister->isRunning() ) {
-    lister->terminate();
-    lister->wait();
+  if ( m_lister->isRunning() ) {
+    m_lister->terminate();
+    m_lister->wait();
     restartLister = true;
   }
 
   // remove existing db conenction
-  RDDatabaseHandler::removeDbConnection ( curProfileName );
+  RDDatabaseHandler::removeDbConnection( m_curProfileName );
 
   if ( renameDirectory ) {
-    renameDatabaseFile ( databaseFile(), rpmDownloaderSettings().cacheDir().absolutePath() + "/" + curProfileName + "/" + newProfileName + ".db" );
-    renameRepoCacheDir ( rpmDownloaderSettings().cacheDir().absolutePath(), curProfileName, newProfileName );
+    renameDatabaseFile( databaseFile(), rpmDownloaderSettings().cacheDir().absolutePath() + "/" + m_curProfileName + "/" + newProfileName + ".db" );
+    renameRepoCacheDir( rpmDownloaderSettings().cacheDir().absolutePath(), m_curProfileName, newProfileName );
   }
 
-  curProfileName = newProfileName;
+  m_curProfileName = newProfileName;
 }
 
 void RepositoryProfile::removeCacheDir()
 {
-  removeDirectory ( rpmDownloaderSettings().cacheDir().absolutePath() + "/" + curProfileName );
+  removeDirectory( rpmDownloaderSettings().cacheDir().absolutePath() + "/" + m_curProfileName );
 }
 
 
-void RepositoryProfile::addPackage ( const Package &package )
+void RepositoryProfile::addPackage( const Package &package )
 {
-  packages.insert ( package.packageName(), package );
+  m_packages.insert( package.packageName(), package );
   // set the architecture for this package
-  packages[package.packageName() ].setArchitectures ( PackageMetaData::archStringList ( architecures() ) );
-  updatePackageStatus ( package.packageName() );
+  m_packages[package.packageName() ].setArchitectures( PackageMetaData::archStringList( architecures() ) );
+  updatePackageStatus( package.packageName() );
 }
 
-bool RepositoryProfile::containsPackage ( const QString &name ) const
+bool RepositoryProfile::containsPackage( const QString &name ) const
 {
-  return packages.contains ( name );
+  return m_packages.contains( name );
 }
 
-void RepositoryProfile::removePackage ( const QString & packageName )
+void RepositoryProfile::removePackage( const QString &packageName )
 {
   // don't recompute status here for every deleted package
   // call computeProfileStatus instead
-  if ( packages.contains ( packageName ) )
-    packages.remove ( packageName );
+  if ( m_packages.contains( packageName ) )
+    m_packages.remove( packageName );
 }
 
-void RepositoryProfile::changePackageName ( const QString & oldName, const QString & newName )
+void RepositoryProfile::changePackageName( const QString &oldName, const QString &newName )
 {
-  Package package = packages.take ( oldName );
-  package.setPackageName ( newName );
-  packages.insert ( newName, package );
+  Package package = m_packages.take( oldName );
+  package.setPackageName( newName );
+  m_packages.insert( newName, package );
 }
 
 void RepositoryProfile::computeProfileStatus()
@@ -158,10 +158,10 @@ void RepositoryProfile::computeProfileStatus()
   clearStats();
 
   // set download size to zero so that calculate works as expected
-  requiredDownlodSize = 0;
+  m_requiredDownlodSize = 0;
 
-  if ( packages.size() < 1 ) {
-    status = UNKNOWN;
+  if ( m_packages.size() < 1 ) {
+    m_status = UNKNOWN;
     return;
   }
 
@@ -173,66 +173,67 @@ void RepositoryProfile::computeProfileStatus()
   bool someAvailable = false;
   bool someLocalAvailable = false;
 
-  QHash<QString, Package>::const_iterator packageIterator = packages.begin();
+  QHash<QString, Package>::const_iterator packageIterator = m_packages.begin();
 
-  for ( ; packageIterator != packages.end(); ++packageIterator ) {
+  for ( ; packageIterator != m_packages.end(); ++packageIterator ) {
     if ( packageIterator.value().packageStatus() == OK ) {
       allUnknown = false;
       allFailed = false;
-      ++okPackages;
+      ++m_okPackages;
 
     } else if ( packageIterator.value().packageStatus() == FAILED ) {
       allOk = false;
       allUnknown = false;
-      ++failedPackages;
+      ++m_failedPackages;
 
     } else if ( packageIterator.value().packageStatus() == UNKNOWN ) {
       allOk = false;
       allFailed = false;
-      ++unknownPackages;
+      ++m_unknownPackages;
 
     } else if ( packageIterator.value().packageStatus() == LOCALAVAIL ) {
       allOk = false;
       allFailed = false;
       someLocalAvailable = true;
-      ++localAvailPackages;
+      ++m_localAvailPackages;
 
     } else if ( packageIterator.value().packageStatus() == UPDATE ) {
       allOk = false;
       allUnknown = false;
       allFailed = false;
       atLeastOneUpdate = true;
-      ++updatedPackages;
+      ++m_updatedPackages;
 
     } else if ( packageIterator.value().packageStatus() == AVAILABLE ) {
       allOk = false;
       allUnknown = false;
       someAvailable = true;
-      ++availPackages;
+      ++m_availPackages;
 
     } else {
       allOk = false;
       allFailed = false;
     }
 
-    requiredDownlodSize += getRequiredDownloadSizeForPackage ( packageIterator.value() );
+    m_requiredDownlodSize += getRequiredDownloadSizeForPackage( packageIterator.value() );
   }
 
   if ( atLeastOneUpdate )
-    status = UPDATE;
+    m_status = UPDATE;
   else if ( allOk && !atLeastOneUpdate && !someLocalAvailable )
-    status = OK;
+    m_status = OK;
   else if ( someAvailable )
-    status = AVAILABLE;
+    m_status = AVAILABLE;
   else if ( allFailed )
-    status = FAILED;
+    m_status = FAILED;
   else if ( allUnknown )
-    status = UNKNOWN;
+    m_status = UNKNOWN;
   else if ( someLocalAvailable )
-    status = LOCALAVAIL;
+    m_status = LOCALAVAIL;
 
-  if ( requiredDownlodSize < 0 ) // could not calculate size
-    requiredDownlodSize = -1;
+  if ( m_requiredDownlodSize < 0 ) { // could not calculate size
+    m_requiredDownlodSize = -1;
+  }
 }
 
 int RepositoryProfile::numberOfPackagesToDownload() const
@@ -241,7 +242,7 @@ int RepositoryProfile::numberOfPackagesToDownload() const
 
   QHash<QString, Package>::const_iterator packageIter;
 
-  for ( packageIter = packages.begin(); packageIter != packages.end(); ++packageIter ) {
+  for ( packageIter = m_packages.begin(); packageIter != m_packages.end(); ++packageIter ) {
     if ( packageIter.value().packageStatus() == UPDATE || packageIter.value().packageStatus() == AVAILABLE ) {
       numberOfPackages += packageIter.value().requiredForDownload().size();
     }
@@ -256,7 +257,7 @@ QList< PackageMetaData > RepositoryProfile::packageMetaDatasOfpackagesToDownload
 
   QHash<QString, Package>::const_iterator packageIter;
 
-  for ( packageIter = packages.begin(); packageIter != packages.end(); ++packageIter ) {
+  for ( packageIter = m_packages.begin(); packageIter != m_packages.end(); ++packageIter ) {
     if ( packageIter.value().packageStatus() == UPDATE || packageIter.value().packageStatus() == AVAILABLE ) {
       packagesToDownload << packageIter.value().requiredForDownload();
     }
@@ -271,9 +272,9 @@ bool RepositoryProfile::deleteAllPackagesFromDisk()
 
   QHash<QString, Package>::iterator packageIter;
 
-  for ( packageIter = packages.begin(); packageIter != packages.end(); ++packageIter ) {
+  for ( packageIter = m_packages.begin(); packageIter != m_packages.end(); ++packageIter ) {
     if ( success )
-      success = deletePackageFromDisk ( packageIter.value().packageName(), false ); // it is not necessary to compute status on every iteration setting recompute to false
+      success = deletePackageFromDisk( packageIter.value().packageName(), false );  // it is not necessary to compute status on every iteration setting recompute to false
     else
       return success;
   }
@@ -283,9 +284,9 @@ bool RepositoryProfile::deleteAllPackagesFromDisk()
   return success;
 }
 
-bool RepositoryProfile::deletePackageFromDisk ( const QString & rpmName, const bool recomputeStatus )
+bool RepositoryProfile::deletePackageFromDisk( const QString &rpmName, const bool recomputeStatus )
 {
-  bool success = packages[rpmName].deleteLocalFiles ( downloadDir() );
+  bool success = m_packages[rpmName].deleteLocalFiles( downloadDir() );
 
   if ( recomputeStatus )
     computeProfileStatus();
@@ -295,20 +296,20 @@ bool RepositoryProfile::deletePackageFromDisk ( const QString & rpmName, const b
 
 void RepositoryProfile::clearStatus()
 {
-  foreach ( const QString &key, packages.keys() ) {
-    packages[key].clearStatus();
+  foreach ( const QString & key, m_packages.keys() ) {
+    m_packages[key].clearStatus();
   }
 
   computeProfileStatus();
 }
 
-void RepositoryProfile::packagesUpdated ( const bool removeOldVersions )
+void RepositoryProfile::packagesUpdated( const bool removeOldVersions )
 {
   QHash<QString, Package>::iterator packageIter;
 
-  for ( packageIter = packages.begin(); packageIter != packages.end(); ++packageIter ) {
+  for ( packageIter = m_packages.begin(); packageIter != m_packages.end(); ++packageIter ) {
     if ( packageIter.value().packageStatus() == UPDATE || packageIter.value().packageStatus() == AVAILABLE )
-      packageIter.value().packageUpdated ( downloadDir(), removeOldVersions );
+      packageIter.value().packageUpdated( downloadDir(), removeOldVersions );
   }
 
   computeProfileStatus();
@@ -316,42 +317,43 @@ void RepositoryProfile::packagesUpdated ( const bool removeOldVersions )
 
 int RepositoryProfile::numberOfSelectedPackages() const
 {
-  return packages.size();
+  return m_packages.size();
 }
 
 void RepositoryProfile::threadFinished()
 {
-  repositoryContent = lister->getRepoPackageInformations();
-  localContent = lister->getLocalPackageInformations();
+  m_repositoryContent = m_lister->getRepoPackageInformations();
+  m_localContent = m_lister->getLocalPackageInformations();
 
   // create a list of provided packages for faster access later
   QSet<QString> c;
-  foreach ( const QString &arch, repositoryContent.keys() ) {
-    foreach ( const QString &name, repositoryContent.value ( arch ).keys() ) {
+
+  foreach ( const QString & arch, m_repositoryContent.keys() ) {
+    foreach ( const QString & name, m_repositoryContent.value( arch ).keys() ) {
       c << name;
     }
   }
 
-  repoContent = c.values();
+  m_repoContent = c.values();
 
   updatePackagesStatus();
   computeProfileStatus();
-  emit ( statusRefreshed() );
+  emit( statusRefreshed() );
 }
 
 void RepositoryProfile::updatePackagesStatus()
 {
-  foreach ( const QString &packageName, packages.keys() ) {
-    updatePackageStatus ( packageName, false ); // don't compute profile status
+  foreach ( const QString & packageName, m_packages.keys() ) {
+    updatePackageStatus( packageName, false );  // don't compute profile status
   }
 }
 
-void RepositoryProfile::updatePackageStatus ( const QString& packageName, bool recomputeStatus )
+void RepositoryProfile::updatePackageStatus( const QString &packageName, bool recomputeStatus )
 {
-  if ( !repositoryContent.isEmpty() ) // if it is not available yet don't set remote version
-    packages[packageName].setRemoteVersions ( repositoryContent );
+  if ( !m_repositoryContent.isEmpty() ) // if it is not available yet don't set remote version
+    m_packages[packageName].setRemoteVersions( m_repositoryContent );
 
-  packages[packageName].setLocalVersions ( localContent );
+  m_packages[packageName].setLocalVersions( m_localContent );
 
   if ( recomputeStatus )
     computeProfileStatus();
@@ -360,124 +362,124 @@ void RepositoryProfile::updatePackageStatus ( const QString& packageName, bool r
 
 void RepositoryProfile::refreshStatus()
 {
-  if ( lister->isRunning() ) // thread is running do nothing
+  if ( m_lister->isRunning() ) // thread is running do nothing
     return;
 
-  lister->setArchitectures ( PackageMetaData::archStringList ( architecures() ) );
+  m_lister->setArchitectures( PackageMetaData::archStringList( architecures() ) );
 
-  lister->setDatabasePath ( databaseFile() );
+  m_lister->setDatabasePath( databaseFile() );
 
-  lister->setRepoName ( profileName() );
+  m_lister->setRepoName( profileName() );
 
-  lister->setDownloadPath ( downloadDir() );
+  m_lister->setDownloadPath( downloadDir() );
 
-  lister->start();
+  m_lister->start();
 }
 
 QString RepositoryProfile::databaseFile() const
 {
-  QDir dir ( rpmDownloaderSettings().cacheDir().absolutePath() + "/" + curProfileName );
+  QDir dir( rpmDownloaderSettings().cacheDir().absolutePath() + "/" + m_curProfileName );
 
   if ( !dir.exists() )
-    dir.mkpath ( rpmDownloaderSettings().cacheDir().absolutePath() + "/" + curProfileName );
+    dir.mkpath( rpmDownloaderSettings().cacheDir().absolutePath() + "/" + m_curProfileName );
 
-  return rpmDownloaderSettings().cacheDir().absolutePath() + "/" + curProfileName + "/" + curProfileName + ".db";
+  return rpmDownloaderSettings().cacheDir().absolutePath() + "/" + m_curProfileName + "/" + m_curProfileName + ".db";
 }
 
-void RepositoryProfile::removeDirectory ( const QString& path )
+void RepositoryProfile::removeDirectory( const QString &path )
 {
-  QDir dir ( path );
+  QDir dir( path );
 
   if ( !dir.exists() ) // nothing to delete
     return;
 
-  clearDirectory ( path );
+  clearDirectory( path );
 
-  if ( !dir.rmdir ( path ) )
-    qDebug ( "could not remove directory: %s", qPrintable ( path ) );
+  if ( !dir.rmdir( path ) )
+    qDebug( "could not remove directory: %s", qPrintable( path ) );
 }
 
-void RepositoryProfile::clearDirectory ( const QString& path )
+void RepositoryProfile::clearDirectory( const QString &path )
 {
-  QDir dir ( path );
+  QDir dir( path );
 
   if ( !dir.exists() ) // nothing to delete
     return;
 
   QStringList files = dir.entryList();
 
-  foreach ( const QString &file, files ) {
+  foreach ( const QString & file, files ) {
     // only remove files
-    QFileInfo fileInfo ( dir, file );
+    QFileInfo fileInfo( dir, file );
 
     if ( fileInfo.isFile() ) {
-      if ( !dir.remove ( file ) )
-        qDebug ( "could not remove file: %s", qPrintable ( file ) );
+      if ( !dir.remove( file ) )
+        qDebug( "could not remove file: %s", qPrintable( file ) );
     }
   }
 }
 
-void RepositoryProfile::renameRepoCacheDir ( const QString& path, const QString& oldName, const QString& newName )
+void RepositoryProfile::renameRepoCacheDir( const QString &path, const QString &oldName, const QString &newName )
 {
-  QDir dir ( path );
+  QDir dir( path );
 
   if ( !dir.exists() ) // given dir does not exist
     return;
 
-  if ( !dir.rename ( oldName, newName ) )
-    qDebug ( "could not rename directory: path %s, old name %s, new name %s", qPrintable ( path ), qPrintable ( oldName ), qPrintable ( newName ) );
+  if ( !dir.rename( oldName, newName ) )
+    qDebug( "could not rename directory: path %s, old name %s, new name %s", qPrintable( path ), qPrintable( oldName ), qPrintable( newName ) );
 }
 
-void RepositoryProfile::renameDatabaseFile ( const QString& oldName, const QString& newName )
+void RepositoryProfile::renameDatabaseFile( const QString &oldName, const QString &newName )
 {
-  QFile file ( oldName );
+  QFile file( oldName );
 
   if ( !file.exists() )
     return;
 
-  if ( !file.rename ( newName ) )
-    qDebug ( "could not rename file: %s", qPrintable ( oldName ) );
+  if ( !file.rename( newName ) )
+    qDebug( "could not rename file: %s", qPrintable( oldName ) );
 }
 
-Status RepositoryProfile::getPackageStatus ( const QString& packageName ) const
+Status RepositoryProfile::getPackageStatus( const QString &packageName ) const
 {
-  return packages.value ( packageName ).packageStatus();
+  return m_packages.value( packageName ).packageStatus();
 }
 
-PackageVersions RepositoryProfile::getLocalPackageVersions ( const QString& packageName ) const
+PackageVersions RepositoryProfile::getLocalPackageVersions( const QString &packageName ) const
 {
-  return packages.value ( packageName ).localVersions();
+  return m_packages.value( packageName ).localVersions();
 }
 
-PackageVersions RepositoryProfile::getRemotePackageVersions ( const QString& packageName ) const
+PackageVersions RepositoryProfile::getRemotePackageVersions( const QString &packageName ) const
 {
-  return packages.value ( packageName ).availableversions();
+  return m_packages.value( packageName ).availableversions();
 }
 
-bool RepositoryProfile::hasPackage ( const QString& packageName ) const
+bool RepositoryProfile::hasPackage( const QString &packageName ) const
 {
-  if ( packages.contains ( packageName ) )
+  if ( m_packages.contains( packageName ) )
     return true;
 
   return false;
 }
 
-ArchitecutreDependentMetaData RepositoryProfile::getLocalMetaData ( const QString& packageName ) const
+ArchitecutreDependentMetaData RepositoryProfile::getLocalMetaData( const QString &packageName ) const
 {
-  return packages.value ( packageName ).getLocalPackageMetaData();
+  return m_packages.value( packageName ).getLocalPackageMetaData();
 }
 
-ArchitecutreDependentMetaData RepositoryProfile::getRemoteMetaData ( const QString& packageName ) const
+ArchitecutreDependentMetaData RepositoryProfile::getRemoteMetaData( const QString &packageName ) const
 {
-  return packages.value ( packageName ).getRemotePackageMetaData();
+  return m_packages.value( packageName ).getRemotePackageMetaData();
 }
 
-const Package RepositoryProfile::getPackageData ( const QString& packageName ) const
+const Package RepositoryProfile::getPackageData( const QString &packageName ) const
 {
-  return packages.value ( packageName );
+  return m_packages.value( packageName );
 }
 
-qint64 RepositoryProfile::getRequiredDownloadSizeForPackage ( const Package& package )
+qint64 RepositoryProfile::getRequiredDownloadSizeForPackage( const Package &package )
 {
   QList<PackageMetaData> mData = package.requiredForDownload();
   qint64 size = 0;
@@ -495,16 +497,16 @@ int RepositoryProfile::cleanupOrphanedPackages()
 {
   int removedOrphanedPackages = 0;
 
-  QHash<QString, Package>::iterator packageIter = packages.begin();
+  QHash<QString, Package>::iterator packageIter = m_packages.begin();
 
-  while ( packageIter != packages.end() ) {
+  while ( packageIter != m_packages.end() ) {
     if ( packageIter->packageStatus() == LOCALAVAIL ) {
-      deletePackageFromDisk ( packageIter->packageName(), false );
+      deletePackageFromDisk( packageIter->packageName(), false );
 
     }
 
     if ( packageIter->packageStatus() == FAILED || packageIter->packageStatus() == LOCALAVAIL ) {
-      packageIter = packages.erase ( packageIter );
+      packageIter = m_packages.erase( packageIter );
       ++removedOrphanedPackages;
 
     } else {

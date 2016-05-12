@@ -38,90 +38,90 @@ class RepositoryProfile : public QObject
 {
     Q_OBJECT
   public:
-    RepositoryProfile ( QObject *parent = 0 );
+    RepositoryProfile( QObject *parent = 0 );
 
-    QString profileName() const {return curProfileName;}
+    QString profileName() const {return m_curProfileName;}
 
-    void setProfileName ( const QString &newProfileName, bool renameDirectory = true );
+    void setProfileName( const QString &newProfileName, bool renameDirectory = true );
 
-    QUrl serverUrl() const {return curUrl;}
+    QUrl serverUrl() const {return m_curUrl;}
 
-    void setServerUrl ( const QUrl &newUrl );
-    void setServerUrl ( const QString &newUrl ); //overloaded member function, provided for convenience.
+    void setServerUrl( const QUrl &newUrl );
+    void setServerUrl( const QString &newUrl );  //overloaded member function, provided for convenience.
 
     QString downloadDir() const;
-    void setDownloadDir ( const QString &newDownloadDir );
+    void setDownloadDir( const QString &newDownloadDir );
 
     QString databaseFile() const; // returns the complete path to the sqlite database file
 
-    RepositoryType repoType() const {return repositoryType;}
+    RepositoryType repoType() const { return m_repositoryType; }
 
-    void setRepoType ( RepositoryType type );
+    void setRepoType( RepositoryType type );
 
-    RPM::Architectures architecures() const {return curArchitectures;}
+    RPM::Architectures architecures() const { return m_curArchitectures; }
 
-    void setArchitectures ( const RPM::Architectures newArchitectures );
+    void setArchitectures( const RPM::Architectures newArchitectures );
 
-    void addPackage ( const Package &package );
-    void removePackage ( const QString &packageName ); // doesn't recompute status
-    void changePackageName ( const QString &oldName, const QString &newName );
+    void addPackage( const Package &package );
+    void removePackage( const QString &packageName );  // doesn't recompute status
+    void changePackageName( const QString &oldName, const QString &newName );
 
-    bool containsPackage ( const QString &name ) const;
+    bool containsPackage( const QString &name ) const;
 
     bool deleteAllPackagesFromDisk();
-    bool deletePackageFromDisk ( const QString &rpmName, const bool recomputeStatus = true );
+    bool deletePackageFromDisk( const QString &rpmName, const bool recomputeStatus = true );
 
     void removeCacheDir(); // removes the cache dir for this profile e.g. when it is removed
 
     void clearStatus(); // clears the status of the profile includign all RPMS
 
-    void packagesUpdated ( const bool removeOldVersions ); // means the packages with status AVAILABLE or UPDATE were updated and remote file is now local file
+    void packagesUpdated( const bool removeOldVersions );  // means the packages with status AVAILABLE or UPDATE were updated and remote file is now local file
     // void packageUpdated(QString packageName, QString architecture, const bool removeOldVersions);
 
     int numberOfPackagesToDownload() const;
     QList<PackageMetaData> packageMetaDatasOfpackagesToDownload() const; // returns the filenames which sould be downloaded
 
-    QHash<QString, Package> selectedPackages() const {return packages;} // returns all packages selected dor this repo
+    QHash<QString, Package> selectedPackages() const { return m_packages; } // returns all packages selected dor this repo
 
     void computeProfileStatus();
-    Status profileStatus() const {return status;}
+    Status profileStatus() const { return m_status; }
 
     // Status packageStatus(const QString &packageName) const {return packages.value(packageName).packageStatus();}
 
     int numberOfSelectedPackages() const; // return number of tpms
-    int numberOfOkPackages() const {return okPackages;} // number of rpms with status = OK
+    int numberOfOkPackages() const { return m_okPackages; } // number of rpms with status = OK
 
-    int numberOfUnknownPackages() const {return unknownPackages;} // number of rpms with status = UNKNOWN
+    int numberOfUnknownPackages() const { return m_unknownPackages; } // number of rpms with status = UNKNOWN
 
-    int numberOfFailedPackages() const {return failedPackages;} // number of rpms with status = FAILED
+    int numberOfFailedPackages() const { return m_failedPackages; } // number of rpms with status = FAILED
 
-    int numberOfAvailablePackages() const {return availPackages;} // number of rpms with status = AVAILABLE
+    int numberOfAvailablePackages() const { return m_availPackages; } // number of rpms with status = AVAILABLE
 
-    int numberOfLocalAvailPackages() const {return localAvailPackages;} // number of rpms with status = LOCALAVAIL
+    int numberOfLocalAvailPackages() const { return m_localAvailPackages; } // number of rpms with status = LOCALAVAIL
 
-    int numberOfUpdatedPackages() const {return updatedPackages;} // number of rpms with status = UPDATE
+    int numberOfUpdatedPackages() const { return m_updatedPackages; } // number of rpms with status = UPDATE
 
-    qint64 downloadSizeInBytes() const {return requiredDownlodSize;}
+    qint64 downloadSizeInBytes() const { return m_requiredDownlodSize; }
 
-    QStringList getProvidedPackages() const {return repoContent;} // get all packages provided by this repo
+    QStringList getProvidedPackages() const { return m_repoContent; } // get all packages provided by this repo
 
-    Status getPackageStatus ( const QString &packageName ) const;
-    PackageVersions getLocalPackageVersions ( const QString &packageName ) const;
-    PackageVersions getRemotePackageVersions ( const QString &packageName ) const;
+    Status getPackageStatus( const QString &packageName ) const;
+    PackageVersions getLocalPackageVersions( const QString &packageName ) const;
+    PackageVersions getRemotePackageVersions( const QString &packageName ) const;
 
     // for displaying details about the package
-    MetaData::ArchitecutreDependentMetaData getLocalMetaData ( const QString &packageName ) const;
-    MetaData::ArchitecutreDependentMetaData getRemoteMetaData ( const QString &packageName ) const;
+    MetaData::ArchitecutreDependentMetaData getLocalMetaData( const QString &packageName ) const;
+    MetaData::ArchitecutreDependentMetaData getRemoteMetaData( const QString &packageName ) const;
 
-    const Package getPackageData ( const QString &packageName ) const;
+    const Package getPackageData( const QString &packageName ) const;
 
     void refreshStatus(); // call this function when database content was updated or to compute initial status
 
-    bool hasPackage ( const QString &packageName ) const; // is package already selected?
+    bool hasPackage( const QString &packageName ) const;  // is package already selected?
 
     int cleanupOrphanedPackages(); // removes orphaned packages from disks, if status = local avail and from the package selecion if status = failed or status = local avail
 
-    static void clearDirectory ( const QString &path );
+    static void clearDirectory( const QString &path );
 
     ~RepositoryProfile();
 
@@ -132,39 +132,39 @@ class RepositoryProfile : public QObject
     void threadFinished();
 
   private:
-    static void renameDatabaseFile ( const QString &oldName, const QString &newName );
-    static void renameRepoCacheDir ( const QString &path, const QString &oldName, const QString &newName );
-    static void removeDirectory ( const QString &path );
+    static void renameDatabaseFile( const QString &oldName, const QString &newName );
+    static void renameRepoCacheDir( const QString &path, const QString &oldName, const QString &newName );
+    static void removeDirectory( const QString &path );
 
     void clearStats();
     void updatePackagesStatus(); // uses the available infomations to update the packages (ALL packages)
-    void updatePackageStatus ( const QString &packageName, bool recomputeStatus = true );
+    void updatePackageStatus( const QString &packageName, bool recomputeStatus = true );
 
-    static qint64 getRequiredDownloadSizeForPackage ( const Package &package );
+    static qint64 getRequiredDownloadSizeForPackage( const Package &package );
 
-    QString curProfileName;
-    QUrl curUrl;
-    QDir curDownloadDir;
-    RPM::Architectures curArchitectures;
-    RepositoryType repositoryType;
+    QString m_curProfileName;
+    QUrl m_curUrl;
+    QDir m_curDownloadDir;
+    RPM::Architectures m_curArchitectures;
+    RepositoryType m_repositoryType;
 
-    Status status;
-    QHash<QString, Package> packages;
-    MetaData::MultipleArchMetaData repositoryContent;
-    MetaData::MultipleArchMetaData localContent;
-    QStringList repoContent; // provides a list of available package names
+    Status m_status;
+    QHash<QString, Package> m_packages;
+    MetaData::MultipleArchMetaData m_repositoryContent;
+    MetaData::MultipleArchMetaData m_localContent;
+    QStringList m_repoContent; // provides a list of available package names
 
     // for stats
-    int okPackages;
-    int availPackages;
-    int updatedPackages;
-    int failedPackages;
-    int localAvailPackages;
-    int unknownPackages;
-    qint64 requiredDownlodSize;
+    int m_okPackages;
+    int m_availPackages;
+    int m_updatedPackages;
+    int m_failedPackages;
+    int m_localAvailPackages;
+    int m_unknownPackages;
+    qint64 m_requiredDownlodSize;
 
     // thread for content reading
-    RDPackageListerThread *lister;
+    RDPackageListerThread *m_lister;
 };
 
 #endif
