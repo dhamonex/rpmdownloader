@@ -42,7 +42,12 @@
 
 
 MainWindow::MainWindow()
-    : QMainWindow(), addRpmsState ( false ), rpmActionsState ( false ), profileActionsState ( true ), profileDownloadActionState ( false ), globalRpmsActionsState ( false )
+    : QMainWindow(), 
+      m_addRpmsState ( false ), 
+      m_rpmActionsState ( false ), 
+      m_profileActionsState ( true ), 
+      m_profileDownloadActionState ( false ), 
+      m_globalRpmsActionsState ( false )
 {
   curl_global_init( CURL_GLOBAL_ALL );
   
@@ -77,358 +82,358 @@ MainWindow::MainWindow()
 
 void MainWindow::createActions()
 {
-  newAction = new QAction ( tr ( "&New" ), this );
-  newAction->setIcon ( QIcon ( ":/images/new.png" ) );
-  newAction->setShortcut ( tr ( "Ctrl+N" ) );
-  newAction->setToolTip ( tr ( "Create a new profiles file" ) );
-  connect ( newAction, SIGNAL ( triggered() ), this, SLOT ( newFile() ) );
+  m_newAction = new QAction ( tr ( "&New" ), this );
+  m_newAction->setIcon ( QIcon ( ":/images/new.png" ) );
+  m_newAction->setShortcut ( tr ( "Ctrl+N" ) );
+  m_newAction->setToolTip ( tr ( "Create a new profiles file" ) );
+  connect ( m_newAction, SIGNAL ( triggered() ), this, SLOT ( newFile() ) );
 
-  openAction = new QAction ( tr ( "&Open..." ), this );
-  openAction->setIcon ( QIcon ( ":/images/open.png" ) );
-  openAction->setShortcut ( tr ( "Ctrl+O" ) );
-  openAction->setToolTip ( tr ( "Open an existing profiles file" ) );
-  connect ( openAction, SIGNAL ( triggered() ), this, SLOT ( open() ) );
+  m_openAction = new QAction ( tr ( "&Open..." ), this );
+  m_openAction->setIcon ( QIcon ( ":/images/open.png" ) );
+  m_openAction->setShortcut ( tr ( "Ctrl+O" ) );
+  m_openAction->setToolTip ( tr ( "Open an existing profiles file" ) );
+  connect ( m_openAction, SIGNAL ( triggered() ), this, SLOT ( open() ) );
 
-  saveAction = new QAction ( tr ( "&Save" ), this );
-  saveAction->setIcon ( QIcon ( ":/images/save.png" ) );
-  saveAction->setShortcut ( tr ( "Ctrl+S" ) );
-  saveAction->setToolTip ( tr ( "Save the profiles file to disk" ) );
-  connect ( saveAction, SIGNAL ( triggered() ), this, SLOT ( save() ) );
+  m_saveAction = new QAction ( tr ( "&Save" ), this );
+  m_saveAction->setIcon ( QIcon ( ":/images/save.png" ) );
+  m_saveAction->setShortcut ( tr ( "Ctrl+S" ) );
+  m_saveAction->setToolTip ( tr ( "Save the profiles file to disk" ) );
+  connect ( m_saveAction, SIGNAL ( triggered() ), this, SLOT ( save() ) );
 
-  saveAsAction = new QAction ( tr ( "Save &As..." ), this );
-  saveAsAction->setToolTip ( tr ( "Save the profiles file under a new name" ) );
-  connect ( saveAsAction, SIGNAL ( triggered() ), this, SLOT ( saveAs() ) );
+  m_saveAsAction = new QAction ( tr ( "Save &As..." ), this );
+  m_saveAsAction->setToolTip ( tr ( "Save the profiles file under a new name" ) );
+  connect ( m_saveAsAction, SIGNAL ( triggered() ), this, SLOT ( saveAs() ) );
 
   for ( int i = 0; i < MaxRecentFiles; ++i ) {
-    recentFileActions[i] = new QAction ( this );
-    recentFileActions[i]->setVisible ( false );
-    connect ( recentFileActions[i], SIGNAL ( triggered() ),
+    m_recentFileActions[i] = new QAction ( this );
+    m_recentFileActions[i]->setVisible ( false );
+    connect ( m_recentFileActions[i], SIGNAL ( triggered() ),
               this, SLOT ( openRecentFile() ) );
   }
 
-  exitAction = new QAction ( tr ( "E&xit" ), this );
+  m_exitAction = new QAction ( tr ( "E&xit" ), this );
 
-  exitAction->setShortcut ( tr ( "Ctrl+Q" ) );
-  exitAction->setToolTip ( tr ( "Exit the application" ) );
-  connect ( exitAction, SIGNAL ( triggered() ), this, SLOT ( close() ) );
+  m_exitAction->setShortcut ( tr ( "Ctrl+Q" ) );
+  m_exitAction->setToolTip ( tr ( "Exit the application" ) );
+  connect ( m_exitAction, SIGNAL ( triggered() ), this, SLOT ( close() ) );
 
-  addNewProfileAction = new QAction ( tr ( "New &Profile" ), this );
-  addNewProfileAction->setIcon ( QIcon ( ":/images/add.png" ) );
-  addNewProfileAction->setShortcut ( tr ( "Ctrl+P" ) );
-  addNewProfileAction->setToolTip ( tr ( "Adds a new Profile" ) );
-  connect ( addNewProfileAction, SIGNAL ( triggered() ), this, SLOT ( addNewProfile() ) );
+  m_addNewProfileAction = new QAction ( tr ( "New &Profile" ), this );
+  m_addNewProfileAction->setIcon ( QIcon ( ":/images/add.png" ) );
+  m_addNewProfileAction->setShortcut ( tr ( "Ctrl+P" ) );
+  m_addNewProfileAction->setToolTip ( tr ( "Adds a new Profile" ) );
+  connect ( m_addNewProfileAction, SIGNAL ( triggered() ), this, SLOT ( addNewProfile() ) );
 
-  deleteAction = new QAction ( tr ( "&Delete current item" ), this );
-  deleteAction->setIcon ( QIcon ( ":/images/remove.png" ) );
-  deleteAction->setShortcut ( tr ( "Del" ) );
-  deleteAction->setToolTip ( tr ( "Deletes the current selected item in the highlited table" ) );
-  connect ( deleteAction, SIGNAL ( triggered() ), rpmDownloaderWidget, SLOT ( deleteCurrentItemsFromActiveTable() ) );
+  m_deleteAction = new QAction ( tr ( "&Delete current item" ), this );
+  m_deleteAction->setIcon ( QIcon ( ":/images/remove.png" ) );
+  m_deleteAction->setShortcut ( tr ( "Del" ) );
+  m_deleteAction->setToolTip ( tr ( "Deletes the current selected item in the highlited table" ) );
+  connect ( m_deleteAction, SIGNAL ( triggered() ), rpmDownloaderWidget, SLOT ( deleteCurrentItemsFromActiveTable() ) );
 
-  addNewRpmToCurProfileAction = new QAction ( tr ( "Add &RPM" ), this );
-  addNewRpmToCurProfileAction->setIcon ( QIcon ( ":/images/addRpm.png" ) );
-  addNewRpmToCurProfileAction->setShortcut ( tr ( "Ctrl+R" ) );
-  addNewRpmToCurProfileAction->setToolTip ( tr ( "Adds a RPM to the current profile" ) );
-  connect ( addNewRpmToCurProfileAction, SIGNAL ( triggered() ), this, SLOT ( addNewRpm() ) );
-  addNewRpmToCurProfileAction->setDisabled ( true );
+  m_addNewRpmToCurProfileAction = new QAction ( tr ( "Add &RPM" ), this );
+  m_addNewRpmToCurProfileAction->setIcon ( QIcon ( ":/images/addRpm.png" ) );
+  m_addNewRpmToCurProfileAction->setShortcut ( tr ( "Ctrl+R" ) );
+  m_addNewRpmToCurProfileAction->setToolTip ( tr ( "Adds a RPM to the current profile" ) );
+  connect ( m_addNewRpmToCurProfileAction, SIGNAL ( triggered() ), this, SLOT ( addNewRpm() ) );
+  m_addNewRpmToCurProfileAction->setDisabled ( true );
 
-  duplicateProfileAction = new QAction ( tr ( "D&uplicate Profile" ), this );
-  duplicateProfileAction->setIcon ( QIcon ( ":/images/duplicate.png" ) );
-  duplicateProfileAction->setShortcut ( tr ( "Ctrl+D" ) );
-  duplicateProfileAction->setToolTip ( tr ( "Duplicates the current selected profile" ) );
-  connect ( duplicateProfileAction, SIGNAL ( triggered() ), rpmDownloaderWidget, SLOT ( duplicateCurrentProfile() ) );
-  duplicateProfileAction->setDisabled ( true );
+  m_duplicateProfileAction = new QAction ( tr ( "D&uplicate Profile" ), this );
+  m_duplicateProfileAction->setIcon ( QIcon ( ":/images/duplicate.png" ) );
+  m_duplicateProfileAction->setShortcut ( tr ( "Ctrl+D" ) );
+  m_duplicateProfileAction->setToolTip ( tr ( "Duplicates the current selected profile" ) );
+  connect ( m_duplicateProfileAction, SIGNAL ( triggered() ), rpmDownloaderWidget, SLOT ( duplicateCurrentProfile() ) );
+  m_duplicateProfileAction->setDisabled ( true );
 
-  deleteSelectedRpmsFromDiskAction = new QAction ( tr ( "&Delete local selceted RPMs" ), this );
-  deleteSelectedRpmsFromDiskAction->setIcon ( QIcon ( ":/images/removeRpmFromDisk.png" ) );
-  deleteSelectedRpmsFromDiskAction->setToolTip ( tr ( "Deletes the local version of the selected RPMs" ) );
-  connect ( deleteSelectedRpmsFromDiskAction, SIGNAL ( triggered() ), rpmDownloaderWidget, SLOT ( deleteSelectedPackagesFromDisk() ) );
-  deleteSelectedRpmsFromDiskAction->setDisabled ( true );
+  m_deleteSelectedRpmsFromDiskAction = new QAction ( tr ( "&Delete local selceted RPMs" ), this );
+  m_deleteSelectedRpmsFromDiskAction->setIcon ( QIcon ( ":/images/removeRpmFromDisk.png" ) );
+  m_deleteSelectedRpmsFromDiskAction->setToolTip ( tr ( "Deletes the local version of the selected RPMs" ) );
+  connect ( m_deleteSelectedRpmsFromDiskAction, SIGNAL ( triggered() ), rpmDownloaderWidget, SLOT ( deleteSelectedPackagesFromDisk() ) );
+  m_deleteSelectedRpmsFromDiskAction->setDisabled ( true );
 
-  deleteAllRpmsFromDiskAction = new QAction ( tr ( "Delete all &local RPMs" ), this );
-  deleteAllRpmsFromDiskAction->setIcon ( QIcon ( ":/images/removeAllRpmsFromDisk.png" ) );
-  deleteAllRpmsFromDiskAction->setToolTip ( tr ( "Deletes the local version of all RPMs in all profiles" ) );
-  connect ( deleteAllRpmsFromDiskAction, SIGNAL ( triggered() ), rpmDownloaderWidget, SLOT ( deleteAllPackagesFromDisk() ) );
-  deleteAllRpmsFromDiskAction->setDisabled ( true );
+  m_deleteAllRpmsFromDiskAction = new QAction ( tr ( "Delete all &local RPMs" ), this );
+  m_deleteAllRpmsFromDiskAction->setIcon ( QIcon ( ":/images/removeAllRpmsFromDisk.png" ) );
+  m_deleteAllRpmsFromDiskAction->setToolTip ( tr ( "Deletes the local version of all RPMs in all profiles" ) );
+  connect ( m_deleteAllRpmsFromDiskAction, SIGNAL ( triggered() ), rpmDownloaderWidget, SLOT ( deleteAllPackagesFromDisk() ) );
+  m_deleteAllRpmsFromDiskAction->setDisabled ( true );
 
-  copyAction = new QAction ( tr ( "C&opy selected RPMs" ), this );
-  copyAction->setIcon ( QIcon ( ":/images/copy.png" ) );
-  copyAction->setShortcut ( tr ( "Ctrl+C" ) );
-  copyAction->setToolTip ( tr ( "Copy the selected RPMs to Clipboard" ) );
-  connect ( copyAction, SIGNAL ( triggered() ), rpmDownloaderWidget, SLOT ( copySelectedPackages() ) );
-  copyAction->setDisabled ( true );
+  m_copyAction = new QAction ( tr ( "C&opy selected RPMs" ), this );
+  m_copyAction->setIcon ( QIcon ( ":/images/copy.png" ) );
+  m_copyAction->setShortcut ( tr ( "Ctrl+C" ) );
+  m_copyAction->setToolTip ( tr ( "Copy the selected RPMs to Clipboard" ) );
+  connect ( m_copyAction, SIGNAL ( triggered() ), rpmDownloaderWidget, SLOT ( copySelectedPackages() ) );
+  m_copyAction->setDisabled ( true );
 
-  cutAction = new QAction ( tr ( "C&ut selected RPMs" ), this );
-  cutAction->setIcon ( QIcon ( ":/images/cut.png" ) );
-  cutAction->setShortcut ( tr ( "Ctrl+X" ) );
-  cutAction->setToolTip ( tr ( "Removes and copies the selected RPMs to clipboard" ) );
-  connect ( cutAction, SIGNAL ( triggered() ), rpmDownloaderWidget, SLOT ( cutSelectedPackages() ) );
-  cutAction->setDisabled ( true );
+  m_cutAction = new QAction ( tr ( "C&ut selected RPMs" ), this );
+  m_cutAction->setIcon ( QIcon ( ":/images/cut.png" ) );
+  m_cutAction->setShortcut ( tr ( "Ctrl+X" ) );
+  m_cutAction->setToolTip ( tr ( "Removes and copies the selected RPMs to clipboard" ) );
+  connect ( m_cutAction, SIGNAL ( triggered() ), rpmDownloaderWidget, SLOT ( cutSelectedPackages() ) );
+  m_cutAction->setDisabled ( true );
 
-  pasteAction = new QAction ( tr ( "&Paste RPMS" ), this );
-  pasteAction->setIcon ( QIcon ( ":/images/paste.png" ) );
-  pasteAction->setShortcut ( tr ( "Ctrl+V" ) );
-  pasteAction->setToolTip ( tr ( "Paste RPMs from clipboard" ) );
-  connect ( pasteAction, SIGNAL ( triggered() ), rpmDownloaderWidget, SLOT ( insertPackagesFromClipboard() ) );
-  pasteAction->setDisabled ( true );
+  m_pasteAction = new QAction ( tr ( "&Paste RPMS" ), this );
+  m_pasteAction->setIcon ( QIcon ( ":/images/paste.png" ) );
+  m_pasteAction->setShortcut ( tr ( "Ctrl+V" ) );
+  m_pasteAction->setToolTip ( tr ( "Paste RPMs from clipboard" ) );
+  connect ( m_pasteAction, SIGNAL ( triggered() ), rpmDownloaderWidget, SLOT ( insertPackagesFromClipboard() ) );
+  m_pasteAction->setDisabled ( true );
 
-  editProfileAction = new QAction ( tr ( "Edit pro&file" ), this );
-  editProfileAction->setIcon ( QIcon ( ":/images/editProfile.png" ) );
-  editProfileAction->setToolTip ( tr ( "Edit the properties of the current selected profile" ) );
-  connect ( editProfileAction, SIGNAL ( triggered() ), this, SLOT ( editProfile() ) );
-  editProfileAction->setDisabled ( true );
+  m_editProfileAction = new QAction ( tr ( "Edit pro&file" ), this );
+  m_editProfileAction->setIcon ( QIcon ( ":/images/editProfile.png" ) );
+  m_editProfileAction->setToolTip ( tr ( "Edit the properties of the current selected profile" ) );
+  connect ( m_editProfileAction, SIGNAL ( triggered() ), this, SLOT ( editProfile() ) );
+  m_editProfileAction->setDisabled ( true );
 
-  editRpmNameAction = new QAction ( tr ( "Edit RPM &name" ), this );
-  editRpmNameAction->setIcon ( QIcon ( ":/images/editRpmName.png" ) );
-  editRpmNameAction->setToolTip ( tr ( "Edit the name of the current selcted RPM" ) );
-  connect ( editRpmNameAction, SIGNAL ( triggered() ), this, SLOT ( editRpmName() ) );
-  editRpmNameAction->setDisabled ( true );
+  m_editRpmNameAction = new QAction ( tr ( "Edit RPM &name" ), this );
+  m_editRpmNameAction->setIcon ( QIcon ( ":/images/editRpmName.png" ) );
+  m_editRpmNameAction->setToolTip ( tr ( "Edit the name of the current selcted RPM" ) );
+  connect ( m_editRpmNameAction, SIGNAL ( triggered() ), this, SLOT ( editRpmName() ) );
+  m_editRpmNameAction->setDisabled ( true );
 
-  cleanOrphanedEntriesAction = new QAction ( tr ( "Clean up &orphaned RPM entries" ), this );
-  cleanOrphanedEntriesAction->setToolTip ( tr ( "Removes orpharned RPMs from disk and from package selection" ) );
-  connect ( cleanOrphanedEntriesAction, SIGNAL ( triggered() ), rpmDownloaderWidget, SLOT ( cleanOrphanedPackageEntries() ) );
+  m_cleanOrphanedEntriesAction = new QAction ( tr ( "Clean up &orphaned RPM entries" ), this );
+  m_cleanOrphanedEntriesAction->setToolTip ( tr ( "Removes orpharned RPMs from disk and from package selection" ) );
+  connect ( m_cleanOrphanedEntriesAction, SIGNAL ( triggered() ), rpmDownloaderWidget, SLOT ( cleanOrphanedPackageEntries() ) );
 
-  clearCacheDirectoryAction = new QAction ( tr ( "&Clear cache directory" ), this );
-  clearCacheDirectoryAction->setIcon ( QIcon ( ":/images/clearCache.png" ) );
-  clearCacheDirectoryAction->setToolTip ( tr ( "Clears the whole cache directory which enforces a complete refresh of all repositories" ) );
-  connect ( clearCacheDirectoryAction, SIGNAL ( triggered() ), rpmDownloaderWidget, SLOT ( clearCacheDirectory() ) );
+  m_clearCacheDirectoryAction = new QAction ( tr ( "&Clear cache directory" ), this );
+  m_clearCacheDirectoryAction->setIcon ( QIcon ( ":/images/clearCache.png" ) );
+  m_clearCacheDirectoryAction->setToolTip ( tr ( "Clears the whole cache directory which enforces a complete refresh of all repositories" ) );
+  connect ( m_clearCacheDirectoryAction, SIGNAL ( triggered() ), rpmDownloaderWidget, SLOT ( clearCacheDirectory() ) );
 
-  resolveDepsForSelectedRpmAction = new QAction ( tr ( "Resol&ve dependencies" ), this );
-  resolveDepsForSelectedRpmAction->setIcon ( QIcon ( ":/images/resolveDeps.png" ) );
-  resolveDepsForSelectedRpmAction->setToolTip ( tr ( "Resolve the dependencies for the current selcted RPM" ) );
-  connect ( resolveDepsForSelectedRpmAction, SIGNAL ( triggered() ), rpmDownloaderWidget, SLOT ( resolveDependenciesForCurrentSelectedPackage() ) );
-  resolveDepsForSelectedRpmAction->setDisabled ( true );
+  m_resolveDepsForSelectedRpmAction = new QAction ( tr ( "Resol&ve dependencies" ), this );
+  m_resolveDepsForSelectedRpmAction->setIcon ( QIcon ( ":/images/resolveDeps.png" ) );
+  m_resolveDepsForSelectedRpmAction->setToolTip ( tr ( "Resolve the dependencies for the current selcted RPM" ) );
+  connect ( m_resolveDepsForSelectedRpmAction, SIGNAL ( triggered() ), rpmDownloaderWidget, SLOT ( resolveDependenciesForCurrentSelectedPackage() ) );
+  m_resolveDepsForSelectedRpmAction->setDisabled ( true );
 
-  showDetailsForSelectedRpmAction = new QAction ( tr ( "Show Package details" ), this );
-  showDetailsForSelectedRpmAction->setToolTip ( tr ( "Shows a detailed overview of the current selected package." ) );
-  connect ( showDetailsForSelectedRpmAction, SIGNAL ( triggered() ), rpmDownloaderWidget, SLOT ( prepareDetailsView() ) );
-  showDetailsForSelectedRpmAction->setDisabled ( true );
+  m_showDetailsForSelectedRpmAction = new QAction ( tr ( "Show Package details" ), this );
+  m_showDetailsForSelectedRpmAction->setToolTip ( tr ( "Shows a detailed overview of the current selected package." ) );
+  connect ( m_showDetailsForSelectedRpmAction, SIGNAL ( triggered() ), rpmDownloaderWidget, SLOT ( prepareDetailsView() ) );
+  m_showDetailsForSelectedRpmAction->setDisabled ( true );
 
-  downloadCurrentProfile = new QAction ( tr ( "Download cur&rent profile" ), this );
-  downloadCurrentProfile->setIcon ( QIcon ( ":/images/downloadOne.png" ) );
-  downloadCurrentProfile->setToolTip ( tr ( "Downloads all RPMs from the current profile" ) );
-  connect ( downloadCurrentProfile, SIGNAL ( triggered() ), this, SLOT ( startDownloadOne() ) );
-  downloadCurrentProfile->setDisabled ( true );
+  m_downloadCurrentProfile = new QAction ( tr ( "Download cur&rent profile" ), this );
+  m_downloadCurrentProfile->setIcon ( QIcon ( ":/images/downloadOne.png" ) );
+  m_downloadCurrentProfile->setToolTip ( tr ( "Downloads all RPMs from the current profile" ) );
+  connect ( m_downloadCurrentProfile, SIGNAL ( triggered() ), this, SLOT ( startDownloadOne() ) );
+  m_downloadCurrentProfile->setDisabled ( true );
 
-  downloadAllProfiles = new QAction ( tr ( "Download &all profiles" ), this );
-  downloadAllProfiles->setIcon ( QIcon ( ":/images/downloadAll.png" ) );
-  downloadAllProfiles->setToolTip ( tr ( "Downloads all rpms from all profiles" ) );
-  connect ( downloadAllProfiles, SIGNAL ( triggered() ), this, SLOT ( startDownloadAll() ) );
-  downloadAllProfiles->setDisabled ( true );
+  m_downloadAllProfiles = new QAction ( tr ( "Download &all profiles" ), this );
+  m_downloadAllProfiles->setIcon ( QIcon ( ":/images/downloadAll.png" ) );
+  m_downloadAllProfiles->setToolTip ( tr ( "Downloads all rpms from all profiles" ) );
+  connect ( m_downloadAllProfiles, SIGNAL ( triggered() ), this, SLOT ( startDownloadAll() ) );
+  m_downloadAllProfiles->setDisabled ( true );
 
-  refreshStatus = new QAction ( tr ( "Refre&sh profile status" ), this );
-  refreshStatus->setIcon ( QIcon ( ":/images/refresh.png" ) );
-  refreshStatus->setToolTip ( tr ( "Refresh repositories and update profiles status" ) );
-  connect ( refreshStatus, SIGNAL ( triggered() ), this, SLOT ( refreshProfileStatus() ) );
+  m_refreshStatus = new QAction ( tr ( "Refre&sh profile status" ), this );
+  m_refreshStatus->setIcon ( QIcon ( ":/images/refresh.png" ) );
+  m_refreshStatus->setToolTip ( tr ( "Refresh repositories and update profiles status" ) );
+  connect ( m_refreshStatus, SIGNAL ( triggered() ), this, SLOT ( refreshProfileStatus() ) );
 
-  changeSettingsAction = new QAction ( tr ( "Change &settings" ), this );
-  changeSettingsAction->setIcon ( QIcon ( ":/images/changeSettings.png" ) );
-  changeSettingsAction->setToolTip ( tr ( "Changes the global settings of RPM Downloader" ) );
-  connect ( changeSettingsAction, SIGNAL ( triggered() ), this, SLOT ( changeSettingsViaDialog() ) );
+  m_changeSettingsAction = new QAction ( tr ( "Change &settings" ), this );
+  m_changeSettingsAction->setIcon ( QIcon ( ":/images/changeSettings.png" ) );
+  m_changeSettingsAction->setToolTip ( tr ( "Changes the global settings of RPM Downloader" ) );
+  connect ( m_changeSettingsAction, SIGNAL ( triggered() ), this, SLOT ( changeSettingsViaDialog() ) );
 
-  showStatusBarAction = new QAction ( tr ( "Display stats status bar" ), this );
-  showStatusBarAction->setToolTip ( tr ( "Switch stats status bar on or off" ) );
-  showStatusBarAction->setCheckable ( true );
-  showStatusBarAction->setChecked ( false );
-  connect ( showStatusBarAction, SIGNAL ( toggled ( bool ) ), this, SLOT ( showStatusBar ( bool ) ) );
+  m_showStatusBarAction = new QAction ( tr ( "Display stats status bar" ), this );
+  m_showStatusBarAction->setToolTip ( tr ( "Switch stats status bar on or off" ) );
+  m_showStatusBarAction->setCheckable ( true );
+  m_showStatusBarAction->setChecked ( false );
+  connect ( m_showStatusBarAction, SIGNAL ( toggled ( bool ) ), this, SLOT ( showStatusBar ( bool ) ) );
 
-  toolButtonStyleActionGroup = new QActionGroup ( this );
-  toolButtonStyleIconOnlyAction = new QAction ( tr ( "Display icons only" ), toolButtonStyleActionGroup );
-  toolButtonStyleIconOnlyAction->setCheckable ( true );
-  toolButtonStyleIconOnlyAction->setData ( Qt::ToolButtonIconOnly );
+  m_toolButtonStyleActionGroup = new QActionGroup ( this );
+  m_toolButtonStyleIconOnlyAction = new QAction ( tr ( "Display icons only" ), m_toolButtonStyleActionGroup );
+  m_toolButtonStyleIconOnlyAction->setCheckable ( true );
+  m_toolButtonStyleIconOnlyAction->setData ( Qt::ToolButtonIconOnly );
 
-  toolButtonStyleTextOnlyAction = new QAction ( tr ( "Display text only" ), toolButtonStyleActionGroup );
-  toolButtonStyleTextOnlyAction->setCheckable ( true );
-  toolButtonStyleTextOnlyAction->setData ( Qt::ToolButtonTextOnly );
+  m_toolButtonStyleTextOnlyAction = new QAction ( tr ( "Display text only" ), m_toolButtonStyleActionGroup );
+  m_toolButtonStyleTextOnlyAction->setCheckable ( true );
+  m_toolButtonStyleTextOnlyAction->setData ( Qt::ToolButtonTextOnly );
 
-  toolButtonStyleTextAndIconAction = new QAction ( tr ( "Display text and icons" ), toolButtonStyleActionGroup );
-  toolButtonStyleTextAndIconAction->setCheckable ( true );
-  toolButtonStyleTextAndIconAction->setData ( Qt::ToolButtonTextUnderIcon );
+  m_toolButtonStyleTextAndIconAction = new QAction ( tr ( "Display text and icons" ), m_toolButtonStyleActionGroup );
+  m_toolButtonStyleTextAndIconAction->setCheckable ( true );
+  m_toolButtonStyleTextAndIconAction->setData ( Qt::ToolButtonTextUnderIcon );
 
-  toolButtonStyleIconOnlyAction->setChecked ( true );
-  connect ( toolButtonStyleActionGroup, SIGNAL ( triggered ( QAction* ) ), this, SLOT ( changeToolBarStyle ( QAction* ) ) );
+  m_toolButtonStyleIconOnlyAction->setChecked ( true );
+  connect ( m_toolButtonStyleActionGroup, SIGNAL ( triggered ( QAction* ) ), this, SLOT ( changeToolBarStyle ( QAction* ) ) );
 
-  increaseToolIconSize = new QAction ( tr ( "Increase button size" ), this );
-  increaseToolIconSize->setToolTip ( tr ( "Increases the button size in the main tool bar" ) );
-  increaseToolIconSize->setIcon ( QIcon ( ":images/increaseButtonSize.png" ) );
-  connect ( increaseToolIconSize, SIGNAL ( triggered() ), this, SLOT ( increaseToolBarIconSize() ) );
+  m_increaseToolIconSize = new QAction ( tr ( "Increase button size" ), this );
+  m_increaseToolIconSize->setToolTip ( tr ( "Increases the button size in the main tool bar" ) );
+  m_increaseToolIconSize->setIcon ( QIcon ( ":images/increaseButtonSize.png" ) );
+  connect ( m_increaseToolIconSize, SIGNAL ( triggered() ), this, SLOT ( increaseToolBarIconSize() ) );
 
-  decreaseToolIconSize = new QAction ( tr ( "Decrease button size" ), this );
-  decreaseToolIconSize->setToolTip ( tr ( "Decreases the button size in the main tool bar" ) );
-  decreaseToolIconSize->setIcon ( QIcon ( ":images/decreaseButtonSize.png" ) );
-  connect ( decreaseToolIconSize, SIGNAL ( triggered() ), this, SLOT ( decreaseToolBarIconSize() ) );
+  m_decreaseToolIconSize = new QAction ( tr ( "Decrease button size" ), this );
+  m_decreaseToolIconSize->setToolTip ( tr ( "Decreases the button size in the main tool bar" ) );
+  m_decreaseToolIconSize->setIcon ( QIcon ( ":images/decreaseButtonSize.png" ) );
+  connect ( m_decreaseToolIconSize, SIGNAL ( triggered() ), this, SLOT ( decreaseToolBarIconSize() ) );
 
-  showLegendAction = new QAction ( tr ( "&Legend" ), this );
-  showLegendAction->setToolTip ( tr ( "Show the application's symbol legend" ) );
-  connect ( showLegendAction, SIGNAL ( triggered() ), this, SLOT ( showLegend() ) );
+  m_showLegendAction = new QAction ( tr ( "&Legend" ), this );
+  m_showLegendAction->setToolTip ( tr ( "Show the application's symbol legend" ) );
+  connect ( m_showLegendAction, SIGNAL ( triggered() ), this, SLOT ( showLegend() ) );
 
-  aboutAction = new QAction ( tr ( "&About" ), this );
-  aboutAction->setToolTip ( tr ( "Show the application's About box" ) );
-  connect ( aboutAction, SIGNAL ( triggered() ), this, SLOT ( about() ) );
+  m_aboutAction = new QAction ( tr ( "&About" ), this );
+  m_aboutAction->setToolTip ( tr ( "Show the application's About box" ) );
+  connect ( m_aboutAction, SIGNAL ( triggered() ), this, SLOT ( about() ) );
 
-  aboutQtAction = new QAction ( tr ( "About &Qt" ), this );
-  aboutQtAction->setToolTip ( tr ( "Show the Qt library's About box" ) );
-  connect ( aboutQtAction, SIGNAL ( triggered() ), qApp, SLOT ( aboutQt() ) );
+  m_aboutQtAction = new QAction ( tr ( "About &Qt" ), this );
+  m_aboutQtAction->setToolTip ( tr ( "Show the Qt library's About box" ) );
+  connect ( m_aboutQtAction, SIGNAL ( triggered() ), qApp, SLOT ( aboutQt() ) );
 }
 
 void MainWindow::createMenus()
 {
-  fileMenu = menuBar()->addMenu ( tr ( "&File" ) );
-  fileMenu->addAction ( newAction );
-  fileMenu->addAction ( openAction );
-  fileMenu->addAction ( saveAction );
-  fileMenu->addAction ( saveAsAction );
+  m_fileMenu = menuBar()->addMenu ( tr ( "&File" ) );
+  m_fileMenu->addAction ( m_newAction );
+  m_fileMenu->addAction ( m_openAction );
+  m_fileMenu->addAction ( m_saveAction );
+  m_fileMenu->addAction ( m_saveAsAction );
 
-  separatorAction = fileMenu->addSeparator();
+  m_separatorAction = m_fileMenu->addSeparator();
 
   for ( int i = 0; i < MaxRecentFiles; ++i )
-    fileMenu->addAction ( recentFileActions[i] );
+    m_fileMenu->addAction ( m_recentFileActions[i] );
 
-  fileMenu->addSeparator();
+  m_fileMenu->addSeparator();
 
-  fileMenu->addAction ( exitAction );
+  m_fileMenu->addAction ( m_exitAction );
 
-  editMenu = menuBar()->addMenu ( tr ( "&Edit" ) );
+  m_editMenu = menuBar()->addMenu ( tr ( "&Edit" ) );
 
-  editMenu->addAction ( addNewProfileAction );
+  m_editMenu->addAction ( m_addNewProfileAction );
 
-  editMenu->addAction ( addNewRpmToCurProfileAction );
+  m_editMenu->addAction ( m_addNewRpmToCurProfileAction );
 
-  editMenu->addAction ( duplicateProfileAction );
+  m_editMenu->addAction ( m_duplicateProfileAction );
 
-  editMenu->addAction ( editProfileAction );
+  m_editMenu->addAction ( m_editProfileAction );
 
-  editMenu->addAction ( editRpmNameAction );
+  m_editMenu->addAction ( m_editRpmNameAction );
 
-  editMenu->addAction ( resolveDepsForSelectedRpmAction );
+  m_editMenu->addAction ( m_resolveDepsForSelectedRpmAction );
 
-  editMenu->addAction ( cleanOrphanedEntriesAction );
+  m_editMenu->addAction ( m_cleanOrphanedEntriesAction );
 
-  editMenu->addAction ( deleteAction );
+  m_editMenu->addAction ( m_deleteAction );
 
-  editMenu->addAction ( clearCacheDirectoryAction );
+  m_editMenu->addAction ( m_clearCacheDirectoryAction );
 
-  editMenu->addSeparator();
+  m_editMenu->addSeparator();
 
-  editMenu->addAction ( copyAction );
+  m_editMenu->addAction ( m_copyAction );
 
-  editMenu->addAction ( cutAction );
+  m_editMenu->addAction ( m_cutAction );
 
-  editMenu->addAction ( pasteAction );
+  m_editMenu->addAction ( m_pasteAction );
 
-  downloadMenu = menuBar()->addMenu ( tr ( "&Download" ) );
+  m_downloadMenu = menuBar()->addMenu ( tr ( "&Download" ) );
 
-  downloadMenu->addAction ( downloadCurrentProfile );
+  m_downloadMenu->addAction ( m_downloadCurrentProfile );
 
-  downloadMenu->addAction ( downloadAllProfiles );
+  m_downloadMenu->addAction ( m_downloadAllProfiles );
 
-  downloadMenu->addAction ( refreshStatus );
+  m_downloadMenu->addAction ( m_refreshStatus );
 
-  downloadMenu->addSeparator();
+  m_downloadMenu->addSeparator();
 
-  downloadMenu->addAction ( deleteSelectedRpmsFromDiskAction );
+  m_downloadMenu->addAction ( m_deleteSelectedRpmsFromDiskAction );
 
-  downloadMenu->addAction ( deleteAllRpmsFromDiskAction );
+  m_downloadMenu->addAction ( m_deleteAllRpmsFromDiskAction );
 
-  settingsMenu = menuBar()->addMenu ( tr ( "&Settings" ) );
+  m_settingsMenu = menuBar()->addMenu ( tr ( "&Settings" ) );
 
-  settingsMenu->addAction ( changeSettingsAction );
+  m_settingsMenu->addAction ( m_changeSettingsAction );
 
-  settingsMenu->addAction ( showStatusBarAction );
+  m_settingsMenu->addAction ( m_showStatusBarAction );
 
   // create submenu
-  toolButtonStyleMenu = settingsMenu->addMenu ( tr ( "&Change Icon Style" ) );
+  m_toolButtonStyleMenu = m_settingsMenu->addMenu ( tr ( "&Change Icon Style" ) );
 
-  toolButtonStyleMenu->addActions ( toolButtonStyleActionGroup->actions() );
+  m_toolButtonStyleMenu->addActions ( m_toolButtonStyleActionGroup->actions() );
 
-  toolButtonStyleMenu->addSeparator();
+  m_toolButtonStyleMenu->addSeparator();
 
-  toolButtonStyleMenu->addAction ( increaseToolIconSize );
+  m_toolButtonStyleMenu->addAction ( m_increaseToolIconSize );
 
-  toolButtonStyleMenu->addAction ( decreaseToolIconSize );
+  m_toolButtonStyleMenu->addAction ( m_decreaseToolIconSize );
 
-  helpMenu = menuBar()->addMenu ( tr ( "&Help" ) );
+  m_helpMenu = menuBar()->addMenu ( tr ( "&Help" ) );
 
-  helpMenu->addAction ( showLegendAction );
+  m_helpMenu->addAction ( m_showLegendAction );
 
-  helpMenu->addAction ( aboutAction );
+  m_helpMenu->addAction ( m_aboutAction );
 
-  helpMenu->addAction ( aboutQtAction );
+  m_helpMenu->addAction ( m_aboutQtAction );
 
 }
 
 void MainWindow::createToolBars()
 {
-  fileToolBar = addToolBar ( tr ( "&File" ) );
-  fileToolBar->setObjectName ( "FileToolBar" );
-  fileToolBar->addAction ( newAction );
-  fileToolBar->addAction ( openAction );
-  fileToolBar->addAction ( saveAction );
+  m_fileToolBar = addToolBar ( tr ( "&File" ) );
+  m_fileToolBar->setObjectName ( "FileToolBar" );
+  m_fileToolBar->addAction ( m_newAction );
+  m_fileToolBar->addAction ( m_openAction );
+  m_fileToolBar->addAction ( m_saveAction );
 
-  editToolBar = addToolBar ( tr ( "&Edit" ) );
-  editToolBar->setObjectName ( "EditToolBar" );
-  editToolBar->addAction ( addNewProfileAction );
-  editToolBar->addAction ( addNewRpmToCurProfileAction );
-  editToolBar->addAction ( duplicateProfileAction );
-  editToolBar->addAction ( editProfileAction );
-  editToolBar->addAction ( editRpmNameAction );
-  editToolBar->addAction ( resolveDepsForSelectedRpmAction );
-  editToolBar->addAction ( deleteAction );
+  m_editToolBar = addToolBar ( tr ( "&Edit" ) );
+  m_editToolBar->setObjectName ( "EditToolBar" );
+  m_editToolBar->addAction ( m_addNewProfileAction );
+  m_editToolBar->addAction ( m_addNewRpmToCurProfileAction );
+  m_editToolBar->addAction ( m_duplicateProfileAction );
+  m_editToolBar->addAction ( m_editProfileAction );
+  m_editToolBar->addAction ( m_editRpmNameAction );
+  m_editToolBar->addAction ( m_resolveDepsForSelectedRpmAction );
+  m_editToolBar->addAction ( m_deleteAction );
 
-  downloadToolBar = addToolBar ( tr ( "&Download" ) );
-  downloadToolBar->setObjectName ( "DownloadToolbar" );
-  downloadToolBar->addAction ( downloadCurrentProfile );
-  downloadToolBar->addAction ( downloadAllProfiles );
-  downloadToolBar->addAction ( refreshStatus );
-  downloadToolBar->addAction ( deleteSelectedRpmsFromDiskAction );
-  downloadToolBar->addAction ( deleteAllRpmsFromDiskAction );
+  m_downloadToolBar = addToolBar ( tr ( "&Download" ) );
+  m_downloadToolBar->setObjectName ( "DownloadToolbar" );
+  m_downloadToolBar->addAction ( m_downloadCurrentProfile );
+  m_downloadToolBar->addAction ( m_downloadAllProfiles );
+  m_downloadToolBar->addAction ( m_refreshStatus );
+  m_downloadToolBar->addAction ( m_deleteSelectedRpmsFromDiskAction );
+  m_downloadToolBar->addAction ( m_deleteAllRpmsFromDiskAction );
 
-  searchToolBar = addToolBar ( tr ( "&Search Filter" ) );
-  searchToolBar->setObjectName ( "SearchToolBar" );
-  searchFieldLineEdit = new SearchFieldLineEdit;
-  searchFieldLineEdit->setDisplayedOnEmptyText ( tr ( "Filter for packages" ) );
-  searchFieldLineEdit->setClearButtonIcon ( QPixmap ( ":/images/edit-clear.png" ) );
-  searchFieldLineEdit->setTextSubmitTimeout ( 1000 );
+  m_searchToolBar = addToolBar ( tr ( "&Search Filter" ) );
+  m_searchToolBar->setObjectName ( "SearchToolBar" );
+  m_searchFieldLineEdit = new SearchFieldLineEdit;
+  m_searchFieldLineEdit->setDisplayedOnEmptyText ( tr ( "Filter for packages" ) );
+  m_searchFieldLineEdit->setClearButtonIcon ( QPixmap ( ":/images/edit-clear.png" ) );
+  m_searchFieldLineEdit->setTextSubmitTimeout ( 1000 );
 
-  connect ( searchFieldLineEdit, SIGNAL ( newSearchText ( const QString & ) ), rpmDownloaderWidget, SLOT ( applyPackageFilter ( const QString & ) ) );
+  connect ( m_searchFieldLineEdit, SIGNAL ( newSearchText ( const QString & ) ), rpmDownloaderWidget, SLOT ( applyPackageFilter ( const QString & ) ) );
 
-  searchLabel = new QLabel ( tr ( "Filter Packages:" ) );
-  searchLabelAction = searchToolBar->addWidget ( searchLabel );
-  searchLineEditAction = searchToolBar->addWidget ( searchFieldLineEdit );
+  m_searchLabel = new QLabel ( tr ( "Filter Packages:" ) );
+  m_searchLabelAction = m_searchToolBar->addWidget ( m_searchLabel );
+  m_searchLineEditAction = m_searchToolBar->addWidget ( m_searchFieldLineEdit );
 }
 
 void MainWindow::createStatusBar()
 {
-  numberOfProfilesLabel = new QLabel ( tr ( "Profiles: %1 " ).arg ( 9999 ) );
-  numberOfPackagesLabel = new QLabel ( tr ( "RPMs: %1 " ).arg ( 9999 ) );
-  numberOfOkPackagesLabel = new QLabel ( tr ( "Ok: %1 " ).arg ( 9999 ) );
-  numberOfFailedRpmsLabel = new QLabel ( tr ( "Failed: %1 " ).arg ( 9999 ) );
-  numberOfAvailPackagesLabel = new QLabel ( tr ( "Avail: %1 " ).arg ( 9999 ) );
-  numberOfLocalAvailPackagesLabel = new QLabel ( tr ( "Local Avail: %1 " ).arg ( 9999 ) );
-  numberOfUpdatedPackagesLabel = new QLabel ( tr ( "Updated: %1 " ).arg ( 9999 ) );
-  numberOfUnknownPackagesLabel = new QLabel ( tr ( "Unknown: %1 " ).arg ( 9999 ) );
-  downloadSizeLabel = new QLabel ( tr ( "Download Size: %1 M" ).arg ( 9999.99 ) );
+  m_numberOfProfilesLabel = new QLabel ( tr ( "Profiles: %1 " ).arg ( 9999 ) );
+  m_numberOfPackagesLabel = new QLabel ( tr ( "RPMs: %1 " ).arg ( 9999 ) );
+  m_numberOfOkPackagesLabel = new QLabel ( tr ( "Ok: %1 " ).arg ( 9999 ) );
+  m_numberOfFailedRpmsLabel = new QLabel ( tr ( "Failed: %1 " ).arg ( 9999 ) );
+  m_numberOfAvailPackagesLabel = new QLabel ( tr ( "Avail: %1 " ).arg ( 9999 ) );
+  m_numberOfLocalAvailPackagesLabel = new QLabel ( tr ( "Local Avail: %1 " ).arg ( 9999 ) );
+  m_numberOfUpdatedPackagesLabel = new QLabel ( tr ( "Updated: %1 " ).arg ( 9999 ) );
+  m_numberOfUnknownPackagesLabel = new QLabel ( tr ( "Unknown: %1 " ).arg ( 9999 ) );
+  m_downloadSizeLabel = new QLabel ( tr ( "Download Size: %1 M" ).arg ( 9999.99 ) );
 
   // set a minmal size
-  numberOfProfilesLabel->setMinimumSize ( numberOfProfilesLabel->sizeHint() );
-  numberOfPackagesLabel->setMinimumSize ( numberOfPackagesLabel->sizeHint() );
-  numberOfOkPackagesLabel->setMinimumSize ( numberOfOkPackagesLabel->sizeHint() );
-  numberOfFailedRpmsLabel->setMinimumSize ( numberOfFailedRpmsLabel->sizeHint() );
-  numberOfAvailPackagesLabel->setMinimumSize ( numberOfAvailPackagesLabel->sizeHint() );
-  numberOfLocalAvailPackagesLabel->setMinimumSize ( numberOfLocalAvailPackagesLabel->sizeHint() );
-  numberOfUpdatedPackagesLabel->setMinimumSize ( numberOfUpdatedPackagesLabel->sizeHint() );
-  numberOfUnknownPackagesLabel->setMinimumSize ( numberOfUnknownPackagesLabel->sizeHint() );
-  downloadSizeLabel->setMinimumSize ( downloadSizeLabel->sizeHint() );
+  m_numberOfProfilesLabel->setMinimumSize ( m_numberOfProfilesLabel->sizeHint() );
+  m_numberOfPackagesLabel->setMinimumSize ( m_numberOfPackagesLabel->sizeHint() );
+  m_numberOfOkPackagesLabel->setMinimumSize ( m_numberOfOkPackagesLabel->sizeHint() );
+  m_numberOfFailedRpmsLabel->setMinimumSize ( m_numberOfFailedRpmsLabel->sizeHint() );
+  m_numberOfAvailPackagesLabel->setMinimumSize ( m_numberOfAvailPackagesLabel->sizeHint() );
+  m_numberOfLocalAvailPackagesLabel->setMinimumSize ( m_numberOfLocalAvailPackagesLabel->sizeHint() );
+  m_numberOfUpdatedPackagesLabel->setMinimumSize ( m_numberOfUpdatedPackagesLabel->sizeHint() );
+  m_numberOfUnknownPackagesLabel->setMinimumSize ( m_numberOfUnknownPackagesLabel->sizeHint() );
+  m_downloadSizeLabel->setMinimumSize ( m_downloadSizeLabel->sizeHint() );
 
   // add to status bar
-  statusBar()->addWidget ( numberOfProfilesLabel, 1 );
-  statusBar()->addWidget ( numberOfPackagesLabel, 1 );
-  statusBar()->addWidget ( numberOfOkPackagesLabel, 1 );
-  statusBar()->addWidget ( numberOfAvailPackagesLabel, 1 );
-  statusBar()->addWidget ( numberOfLocalAvailPackagesLabel, 1 );
-  statusBar()->addWidget ( numberOfUpdatedPackagesLabel, 1 );
-  statusBar()->addWidget ( numberOfUnknownPackagesLabel, 1 );
-  statusBar()->addWidget ( numberOfFailedRpmsLabel, 1 );
-  statusBar()->addWidget ( downloadSizeLabel, 1 );
+  statusBar()->addWidget ( m_numberOfProfilesLabel, 1 );
+  statusBar()->addWidget ( m_numberOfPackagesLabel, 1 );
+  statusBar()->addWidget ( m_numberOfOkPackagesLabel, 1 );
+  statusBar()->addWidget ( m_numberOfAvailPackagesLabel, 1 );
+  statusBar()->addWidget ( m_numberOfLocalAvailPackagesLabel, 1 );
+  statusBar()->addWidget ( m_numberOfUpdatedPackagesLabel, 1 );
+  statusBar()->addWidget ( m_numberOfUnknownPackagesLabel, 1 );
+  statusBar()->addWidget ( m_numberOfFailedRpmsLabel, 1 );
+  statusBar()->addWidget ( m_downloadSizeLabel, 1 );
 
   connect ( rpmDownloaderWidget, SIGNAL ( profileStats ( int, int, int, int, int, int, int, int, const QString& ) ), this, SLOT ( updateStatusBar ( int, int, int, int, int, int, int, int, const QString& ) ) );
   statusBar()->hide();
@@ -436,22 +441,22 @@ void MainWindow::createStatusBar()
 
 void MainWindow::createContextMenu()
 {
-  rpmDownloaderWidget->addActionToProfilesTable ( addNewProfileAction );
-  rpmDownloaderWidget->addActionToProfilesTable ( addNewRpmToCurProfileAction );
-  rpmDownloaderWidget->addActionToProfilesTable ( downloadCurrentProfile );
-  rpmDownloaderWidget->addActionToProfilesTable ( duplicateProfileAction );
-  rpmDownloaderWidget->addActionToProfilesTable ( editProfileAction );
+  rpmDownloaderWidget->addActionToProfilesTable ( m_addNewProfileAction );
+  rpmDownloaderWidget->addActionToProfilesTable ( m_addNewRpmToCurProfileAction );
+  rpmDownloaderWidget->addActionToProfilesTable ( m_downloadCurrentProfile );
+  rpmDownloaderWidget->addActionToProfilesTable ( m_duplicateProfileAction );
+  rpmDownloaderWidget->addActionToProfilesTable ( m_editProfileAction );
   rpmDownloaderWidget->addSeparatorToProfilesTable();
-  rpmDownloaderWidget->addActionToProfilesTable ( deleteAction );
+  rpmDownloaderWidget->addActionToProfilesTable ( m_deleteAction );
 
-  rpmDownloaderWidget->addActionToPackagesTable ( addNewRpmToCurProfileAction );
-  rpmDownloaderWidget->addActionToPackagesTable ( deleteSelectedRpmsFromDiskAction );
-  rpmDownloaderWidget->addActionToPackagesTable ( editRpmNameAction );
-  rpmDownloaderWidget->addActionToPackagesTable ( resolveDepsForSelectedRpmAction );
+  rpmDownloaderWidget->addActionToPackagesTable ( m_addNewRpmToCurProfileAction );
+  rpmDownloaderWidget->addActionToPackagesTable ( m_deleteSelectedRpmsFromDiskAction );
+  rpmDownloaderWidget->addActionToPackagesTable ( m_editRpmNameAction );
+  rpmDownloaderWidget->addActionToPackagesTable ( m_resolveDepsForSelectedRpmAction );
   rpmDownloaderWidget->addSeparatorToPackagesTable();
-  rpmDownloaderWidget->addActionToPackagesTable ( deleteAction );
+  rpmDownloaderWidget->addActionToPackagesTable ( m_deleteAction );
   rpmDownloaderWidget->addSeparatorToPackagesTable();
-  rpmDownloaderWidget->addActionToPackagesTable ( showDetailsForSelectedRpmAction );
+  rpmDownloaderWidget->addActionToPackagesTable ( m_showDetailsForSelectedRpmAction );
 }
 
 void MainWindow::closeEvent ( QCloseEvent * event )
@@ -467,7 +472,7 @@ void MainWindow::closeEvent ( QCloseEvent * event )
 
 void MainWindow::updateRecentFileActions()
 {
-  QMutableStringListIterator i ( recentFiles );
+  QMutableStringListIterator i ( m_recentFiles );
 
   while ( i.hasNext() ) {
     if ( !QFile::exists ( i.next() ) )
@@ -475,20 +480,20 @@ void MainWindow::updateRecentFileActions()
   }
 
   for ( int j = 0; j < MaxRecentFiles; ++j ) {
-    if ( j < recentFiles.count() ) {
+    if ( j < m_recentFiles.count() ) {
       QString text = tr ( "&%1 %2" )
                      .arg ( j + 1 )
-                     .arg ( strippedName ( recentFiles[j] ) );
-      recentFileActions[j]->setText ( text );
-      recentFileActions[j]->setData ( recentFiles[j] );
-      recentFileActions[j]->setVisible ( true );
+                     .arg ( strippedName ( m_recentFiles[j] ) );
+      m_recentFileActions[j]->setText ( text );
+      m_recentFileActions[j]->setData ( m_recentFiles[j] );
+      m_recentFileActions[j]->setVisible ( true );
 
     } else {
-      recentFileActions[j]->setVisible ( false );
+      m_recentFileActions[j]->setVisible ( false );
     }
   }
 
-  separatorAction->setVisible ( !recentFiles.isEmpty() );
+  m_separatorAction->setVisible ( !m_recentFiles.isEmpty() );
 }
 
 void MainWindow::readSettings()
@@ -499,7 +504,7 @@ void MainWindow::readSettings()
   move ( rect.topLeft() );
   resize ( rect.size() );
 
-  recentFiles = settings.value ( "recentFiles" ).toStringList();
+  m_recentFiles = settings.value ( "recentFiles" ).toStringList();
   updateRecentFileActions();
 
   rpmDownloaderSettings().setDeleteOldVersions ( settings.value ( "deleteOldVersions", true ).toBool() );
@@ -513,7 +518,7 @@ void MainWindow::readSettings()
   rpmDownloaderSettings().setGunzipCommand ( settings.value ( "gunzipCommand", rpmDownloaderSettings().gunzipCommand() ).toString() );
   rpmDownloaderSettings().setMaximumPrimaryFileSizeForMemoryLoad ( settings.value ( "maxPrimaryFileSizeForMemoryLoad", rpmDownloaderSettings().maximumPrimaryFileSizeForMemoryLoad() ).toInt() );
 
-  showStatusBarAction->setChecked ( settings.value ( "showStatusBar", false ).toBool() );
+  m_showStatusBarAction->setChecked ( settings.value ( "showStatusBar", false ).toBool() );
 
   rpmDownloaderSettings().setMemDbSatSolving ( settings.value ( "useMemDabSatSolving", false ).toBool() );
 
@@ -526,15 +531,15 @@ void MainWindow::readSettings()
   switch ( actToolButtonStyle ) {
     case Qt::ToolButtonTextUnderIcon:
       setToolButtonStyle ( Qt::ToolButtonTextUnderIcon );
-      toolButtonStyleTextAndIconAction->setChecked ( true );
+      m_toolButtonStyleTextAndIconAction->setChecked ( true );
       break;
     case Qt::ToolButtonTextOnly:
       setToolButtonStyle ( Qt::ToolButtonTextOnly );
-      toolButtonStyleTextOnlyAction->setChecked ( true );
+      m_toolButtonStyleTextOnlyAction->setChecked ( true );
       break;
     default:
       setToolButtonStyle ( Qt::ToolButtonIconOnly );
-      toolButtonStyleIconOnlyAction->setChecked ( true );
+      m_toolButtonStyleIconOnlyAction->setChecked ( true );
       break;
   }
 
@@ -547,14 +552,14 @@ void MainWindow::writeSettings()
 {
   QSettings settings ( "Monex Software", "RpmDownloader" );
   settings.setValue ( "geometry", geometry() );
-  settings.setValue ( "recentFiles", recentFiles );
+  settings.setValue ( "recentFiles", m_recentFiles );
   settings.setValue ( "deleteOldVersions", rpmDownloaderSettings().deleteOldVersions() );
   settings.setValue ( "updateInterval", rpmDownloaderSettings().updateInterval() );
   settings.setValue ( "cacheDir", rpmDownloaderSettings().cacheDir().absolutePath() );
   settings.setValue ( "tempDir", rpmDownloaderSettings().tempDir().absolutePath() );
   settings.setValue ( "checksumCommand", rpmDownloaderSettings().checksumCommand() );
   settings.setValue ( "gunzipCommand", rpmDownloaderSettings().gunzipCommand() );
-  settings.setValue ( "showStatusBar", showStatusBarAction->isChecked() );
+  settings.setValue ( "showStatusBar", m_showStatusBarAction->isChecked() );
   settings.setValue ( "useMemDabSatSolving", rpmDownloaderSettings().useMemDbSatSolving() );
   settings.setValue ( "doCheckSumCheck", rpmDownloaderSettings().doCheckSumCheckOnDownloadedPackages() );
   settings.setValue ( "maxPrimaryFileSizeForMemoryLoad", rpmDownloaderSettings().maximumPrimaryFileSizeForMemoryLoad() );
@@ -631,54 +636,54 @@ void MainWindow::editRpmName()
 
 void MainWindow::enableAddRpms ( bool enable )
 {
-  addNewRpmToCurProfileAction->setEnabled ( enable );
-  pasteAction->setEnabled ( enable );
-  addRpmsState = enable;
+  m_addNewRpmToCurProfileAction->setEnabled ( enable );
+  m_pasteAction->setEnabled ( enable );
+  m_addRpmsState = enable;
 }
 
 void MainWindow::enableRpmActions ( bool enable, bool disableSingleItemActions )
 {
-  deleteSelectedRpmsFromDiskAction->setEnabled ( enable );
+  m_deleteSelectedRpmsFromDiskAction->setEnabled ( enable );
 
   if ( enable ) {
-    editRpmNameAction->setDisabled ( disableSingleItemActions );
-    resolveDepsForSelectedRpmAction->setDisabled ( disableSingleItemActions );
-    showDetailsForSelectedRpmAction->setDisabled ( disableSingleItemActions );
+    m_editRpmNameAction->setDisabled ( disableSingleItemActions );
+    m_resolveDepsForSelectedRpmAction->setDisabled ( disableSingleItemActions );
+    m_showDetailsForSelectedRpmAction->setDisabled ( disableSingleItemActions );
 
   } else {
-    editRpmNameAction->setEnabled ( false );
-    resolveDepsForSelectedRpmAction->setEnabled ( false );
-    showDetailsForSelectedRpmAction->setEnabled ( false );
+    m_editRpmNameAction->setEnabled ( false );
+    m_resolveDepsForSelectedRpmAction->setEnabled ( false );
+    m_showDetailsForSelectedRpmAction->setEnabled ( false );
   }
 
-  cutAction->setEnabled ( enable );
+  m_cutAction->setEnabled ( enable );
 
-  copyAction->setEnabled ( enable );
+  m_copyAction->setEnabled ( enable );
 
-  rpmActionsState = enable;
+  m_rpmActionsState = enable;
 }
 
 void MainWindow::enableProfileActions ( bool enable )
 {
-  duplicateProfileAction->setEnabled ( enable );
-  editProfileAction->setEnabled ( enable );
+  m_duplicateProfileAction->setEnabled ( enable );
+  m_editProfileAction->setEnabled ( enable );
 
-  profileActionsState = enable;
+  m_profileActionsState = enable;
 }
 
 void MainWindow::enableGlobalRpmsActions ( bool enable )
 {
-  deleteAllRpmsFromDiskAction->setEnabled ( enable );
-  downloadAllProfiles->setEnabled ( enable );
+  m_deleteAllRpmsFromDiskAction->setEnabled ( enable );
+  m_downloadAllProfiles->setEnabled ( enable );
 
-  globalRpmsActionsState = enable;
+  m_globalRpmsActionsState = enable;
 }
 
 void MainWindow::enableProfileDownloadAction ( bool enable )
 {
-  downloadCurrentProfile->setEnabled ( enable );
+  m_downloadCurrentProfile->setEnabled ( enable );
 
-  profileDownloadActionState = enable;
+  m_profileDownloadActionState = enable;
 }
 
 void MainWindow::editProfile ( RepositoryProfile *profile )
@@ -704,15 +709,15 @@ void MainWindow::tablesModified()
 
 void MainWindow::setCurrentFile ( const QString & fileName )
 {
-  curFile = fileName;
+  m_curFile = fileName;
   setWindowModified ( false );
 
   QString shownName = tr ( "Untitled" );
 
-  if ( !curFile.isEmpty() ) {
-    shownName = strippedName ( curFile );
-    recentFiles.removeAll ( curFile );
-    recentFiles.prepend ( curFile );
+  if ( !m_curFile.isEmpty() ) {
+    shownName = strippedName ( m_curFile );
+    m_recentFiles.removeAll ( m_curFile );
+    m_recentFiles.prepend ( m_curFile );
     updateRecentFileActions();
   }
 
@@ -736,11 +741,11 @@ void MainWindow::openRecentFile()
 
 bool MainWindow::save()
 {
-  if ( curFile.isEmpty() ) {
+  if ( m_curFile.isEmpty() ) {
     return saveAs();
 
   } else {
-    return saveFile ( curFile );
+    return saveFile ( m_curFile );
   }
 }
 
@@ -821,8 +826,8 @@ void MainWindow::startDownloadAll()
 
 void MainWindow::enableDownloadButtons ( bool enable )
 {
-  downloadAllProfiles->setEnabled ( enable );
-  downloadCurrentProfile->setEnabled ( enable );
+  m_downloadAllProfiles->setEnabled ( enable );
+  m_downloadCurrentProfile->setEnabled ( enable );
 }
 
 void MainWindow::downloadFinished()
@@ -837,24 +842,24 @@ void MainWindow::refreshProfileStatus()
 
 void MainWindow::disableEditActions ( bool disable )
 {
-  deleteAction->setDisabled ( disable );
-  refreshStatus->setDisabled ( disable );
-  addNewProfileAction->setDisabled ( disable );
+  m_deleteAction->setDisabled ( disable );
+  m_refreshStatus->setDisabled ( disable );
+  m_addNewProfileAction->setDisabled ( disable );
 
   if ( !disable ) {
-    enableAddRpms ( addRpmsState );
-    enableDownloadButtons ( addRpmsState );
-    deleteSelectedRpmsFromDiskAction->setDisabled ( !rpmActionsState );
-    deleteAllRpmsFromDiskAction->setDisabled ( !rpmActionsState );
-    duplicateProfileAction->setDisabled ( !profileActionsState );
+    enableAddRpms ( m_addRpmsState );
+    enableDownloadButtons ( m_addRpmsState );
+    m_deleteSelectedRpmsFromDiskAction->setDisabled ( !m_rpmActionsState );
+    m_deleteAllRpmsFromDiskAction->setDisabled ( !m_rpmActionsState );
+    m_duplicateProfileAction->setDisabled ( !m_profileActionsState );
 
   } else {
-    addNewRpmToCurProfileAction->setEnabled ( false );
-    pasteAction->setEnabled ( false );
+    m_addNewRpmToCurProfileAction->setEnabled ( false );
+    m_pasteAction->setEnabled ( false );
     enableDownloadButtons ( false );
-    deleteSelectedRpmsFromDiskAction->setDisabled ( true );
-    deleteAllRpmsFromDiskAction->setDisabled ( true );
-    duplicateProfileAction->setDisabled ( true );
+    m_deleteSelectedRpmsFromDiskAction->setDisabled ( true );
+    m_deleteAllRpmsFromDiskAction->setDisabled ( true );
+    m_duplicateProfileAction->setDisabled ( true );
   }
 
   // editRpmNameAction->setDisabled(disable);
@@ -904,15 +909,15 @@ void MainWindow::showLegend()
 
 void MainWindow::updateStatusBar ( int numberOfProfiles, int numberOfRpms, int okRpms, int failedRpms, int updatedRpms, int localAvailRpms, int availRpms, int unknownRpms, const QString &downloadSize )
 {
-  numberOfProfilesLabel->setText ( tr ( "Profiles: %1 " ).arg ( numberOfProfiles ) );
-  numberOfPackagesLabel->setText ( tr ( "RPMs: %1 " ).arg ( numberOfRpms ) );
-  numberOfOkPackagesLabel->setText ( tr ( "Ok: %1 " ).arg ( okRpms ) );
-  numberOfFailedRpmsLabel->setText ( tr ( "Failed: %1 " ).arg ( failedRpms ) );
-  numberOfAvailPackagesLabel->setText ( tr ( "Avail: %1 " ).arg ( availRpms ) );
-  numberOfLocalAvailPackagesLabel->setText ( tr ( "Local Avail: %1 " ).arg ( localAvailRpms ) );
-  numberOfUpdatedPackagesLabel->setText ( tr ( "Updated: %1 " ).arg ( updatedRpms ) );
-  numberOfUnknownPackagesLabel->setText ( tr ( "Unknown: %1 " ).arg ( unknownRpms ) );
-  downloadSizeLabel->setText ( tr ( "Download Size: %1" ).arg ( downloadSize ) );
+  m_numberOfProfilesLabel->setText ( tr ( "Profiles: %1 " ).arg ( numberOfProfiles ) );
+  m_numberOfPackagesLabel->setText ( tr ( "RPMs: %1 " ).arg ( numberOfRpms ) );
+  m_numberOfOkPackagesLabel->setText ( tr ( "Ok: %1 " ).arg ( okRpms ) );
+  m_numberOfFailedRpmsLabel->setText ( tr ( "Failed: %1 " ).arg ( failedRpms ) );
+  m_numberOfAvailPackagesLabel->setText ( tr ( "Avail: %1 " ).arg ( availRpms ) );
+  m_numberOfLocalAvailPackagesLabel->setText ( tr ( "Local Avail: %1 " ).arg ( localAvailRpms ) );
+  m_numberOfUpdatedPackagesLabel->setText ( tr ( "Updated: %1 " ).arg ( updatedRpms ) );
+  m_numberOfUnknownPackagesLabel->setText ( tr ( "Unknown: %1 " ).arg ( unknownRpms ) );
+  m_downloadSizeLabel->setText ( tr ( "Download Size: %1" ).arg ( downloadSize ) );
 }
 
 void MainWindow::showStatusBar ( bool show )

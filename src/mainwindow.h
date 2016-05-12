@@ -25,15 +25,10 @@
 #include "repositoryprofile.h"
 
 class QIcon;
-
 class QAction;
-
 class QActionGroup;
-
 class QLabel;
-
 class RpmDownloaderWidget;
-
 class SearchFieldLineEdit;
 
 class MainWindow : public QMainWindow
@@ -113,96 +108,96 @@ class MainWindow : public QMainWindow
     RpmDownloaderWidget *rpmDownloaderWidget;
 
     // menus
-    QMenu *fileMenu;
-    QMenu *editMenu;
-    QMenu *selectSubMenu;
-    QMenu *toolsMenu;
-    QMenu *optionsMenu;
-    QMenu *downloadMenu;
-    QMenu *settingsMenu;
-    QMenu *helpMenu;
+    QMenu *m_fileMenu;
+    QMenu *m_editMenu;
+    QMenu *m_selectSubMenu;
+    QMenu *m_toolsMenu;
+    QMenu *m_optionsMenu;
+    QMenu *m_downloadMenu;
+    QMenu *m_settingsMenu;
+    QMenu *m_helpMenu;
 
     // submenu for buttons style
-    QMenu *toolButtonStyleMenu;
+    QMenu *m_toolButtonStyleMenu;
 
     // tool bar
-    QToolBar *fileToolBar;
-    QToolBar *editToolBar;
-    QToolBar *downloadToolBar;
-    QToolBar *searchToolBar;
+    QToolBar *m_fileToolBar;
+    QToolBar *m_editToolBar;
+    QToolBar *m_downloadToolBar;
+    QToolBar *m_searchToolBar;
     // search line edit
-    SearchFieldLineEdit *searchFieldLineEdit;
-    QLabel *searchLabel;
+    SearchFieldLineEdit *m_searchFieldLineEdit;
+    QLabel *m_searchLabel;
     // maybe unneeded: container for QToolbar::addWidget which returns a QAction
-    QAction *searchLineEditAction;
-    QAction *searchLabelAction;
+    QAction *m_searchLineEditAction;
+    QAction *m_searchLabelAction;
 
     // for statusbar
-    QLabel *numberOfProfilesLabel;
-    QLabel *numberOfPackagesLabel;
-    QLabel *numberOfOkPackagesLabel;
-    QLabel *numberOfFailedRpmsLabel;
-    QLabel *numberOfAvailPackagesLabel;
-    QLabel *numberOfLocalAvailPackagesLabel;
-    QLabel *numberOfUpdatedPackagesLabel;
-    QLabel *numberOfUnknownPackagesLabel;
-    QLabel *downloadSizeLabel;
+    QLabel *m_numberOfProfilesLabel;
+    QLabel *m_numberOfPackagesLabel;
+    QLabel *m_numberOfOkPackagesLabel;
+    QLabel *m_numberOfFailedRpmsLabel;
+    QLabel *m_numberOfAvailPackagesLabel;
+    QLabel *m_numberOfLocalAvailPackagesLabel;
+    QLabel *m_numberOfUpdatedPackagesLabel;
+    QLabel *m_numberOfUnknownPackagesLabel;
+    QLabel *m_downloadSizeLabel;
 
     // actions
-    QAction *newAction;
-    QAction *openAction;
-    QAction *saveAction;
-    QAction *saveAsAction;
-    QAction *exitAction;
+    QAction *m_newAction;
+    QAction *m_openAction;
+    QAction *m_saveAction;
+    QAction *m_saveAsAction;
+    QAction *m_exitAction;
 
     enum { MaxRecentFiles = 5 };
-    QAction *recentFileActions[MaxRecentFiles];
-    QAction *separatorAction;
+    QAction *m_recentFileActions[MaxRecentFiles];
+    QAction *m_separatorAction;
 
-    QAction *addNewProfileAction;
-    QAction *deleteAction; // deleting current selected item form table
-    QAction *addNewRpmToCurProfileAction;
-    QAction *duplicateProfileAction;
-    QAction *copyAction;
-    QAction *cutAction;
-    QAction *pasteAction;
-    QAction *deleteAllRpmsFromDiskAction;
-    QAction *deleteSelectedRpmsFromDiskAction;
-    QAction *editProfileAction;
-    QAction *editRpmNameAction;
-    QAction *cleanOrphanedEntriesAction;
-    QAction *resolveDepsForSelectedRpmAction;
-    QAction *showDetailsForSelectedRpmAction;
-    QAction *clearCacheDirectoryAction;
+    QAction *m_addNewProfileAction;
+    QAction *m_deleteAction; // deleting current selected item form table
+    QAction *m_addNewRpmToCurProfileAction;
+    QAction *m_duplicateProfileAction;
+    QAction *m_copyAction;
+    QAction *m_cutAction;
+    QAction *m_pasteAction;
+    QAction *m_deleteAllRpmsFromDiskAction;
+    QAction *m_deleteSelectedRpmsFromDiskAction;
+    QAction *m_editProfileAction;
+    QAction *m_editRpmNameAction;
+    QAction *m_cleanOrphanedEntriesAction;
+    QAction *m_resolveDepsForSelectedRpmAction;
+    QAction *m_showDetailsForSelectedRpmAction;
+    QAction *m_clearCacheDirectoryAction;
 
-    QAction *downloadCurrentProfile;
-    QAction *downloadAllProfiles;
-    QAction *refreshStatus;
+    QAction *m_downloadCurrentProfile;
+    QAction *m_downloadAllProfiles;
+    QAction *m_refreshStatus;
 
-    QAction *changeSettingsAction;
-    QAction *showStatusBarAction;
+    QAction *m_changeSettingsAction;
+    QAction *m_showStatusBarAction;
 
     // group the next three actions
-    QAction *toolButtonStyleIconOnlyAction;
-    QAction *toolButtonStyleTextOnlyAction;
-    QAction *toolButtonStyleTextAndIconAction;
-    QActionGroup *toolButtonStyleActionGroup;
-    QAction *increaseToolIconSize;
-    QAction *decreaseToolIconSize;
+    QAction *m_toolButtonStyleIconOnlyAction;
+    QAction *m_toolButtonStyleTextOnlyAction;
+    QAction *m_toolButtonStyleTextAndIconAction;
+    QActionGroup *m_toolButtonStyleActionGroup;
+    QAction *m_increaseToolIconSize;
+    QAction *m_decreaseToolIconSize;
 
-    QAction *showLegendAction;
-    QAction *aboutAction;
-    QAction *aboutQtAction;
+    QAction *m_showLegendAction;
+    QAction *m_aboutAction;
+    QAction *m_aboutQtAction;
 
-    QString curFile;
-    QStringList recentFiles;
+    QString m_curFile;
+    QStringList m_recentFiles;
 
     // action states
-    bool addRpmsState;
-    bool rpmActionsState;
-    bool profileActionsState;
-    bool profileDownloadActionState;
-    bool globalRpmsActionsState;
+    bool m_addRpmsState;
+    bool m_rpmActionsState;
+    bool m_profileActionsState;
+    bool m_profileDownloadActionState;
+    bool m_globalRpmsActionsState;
 };
 
 #endif
