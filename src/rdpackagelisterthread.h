@@ -28,25 +28,23 @@ class QDir;
 class RDPackageListerThread : public QThread
 {
   public:
-    RDPackageListerThread ( QObject* parent = 0 );
+    RDPackageListerThread( QObject *parent = 0 );
 
-    void setDatabasePath ( const QString &dbPath ) {databasePath = dbPath;}
+    void setDatabasePath( const QString &dbPath );
 
-    void setArchitectures ( const QStringList &archs ) {architectures = archs;}
+    void setArchitectures( const QStringList &archs );
 
-    void setRepoName ( const QString &name ) {repoName = name;}
+    void setRepoName( const QString &name );
 
-    void setDownloadPath ( const QString &path ) {localPackagePath = path;} // for reading the local contents
+    void setDownloadPath( const QString &path );
 
-    MultipleArchMetaData
-    getRepoPackageInformations() const {return repositoryMetaInformations;}
+    MultipleArchMetaData getRepoPackageInformations() const;
 
-    MultipleArchMetaData
-    getLocalPackageInformations() const {return localPackageinformations;}
+    MultipleArchMetaData getLocalPackageInformations() const;
 
-    bool finishedSuccesfull() const {return error;}
+    bool finishedSuccesfull() const;
 
-    QString readErrorMsg() const {return errMsg;}
+    QString readErrorMsg() const;
 
     ~RDPackageListerThread();
 
@@ -56,19 +54,17 @@ class RDPackageListerThread : public QThread
   private:
     void getLocalContents();
     MultiplePackageMetaData
-    getContentsFromDir ( const QDir &dir, const QString &arch );
+    getContentsFromDir( const QDir &dir, const QString &arch );
 
-    QStringList architectures;
-    MultipleArchMetaData
-    repositoryMetaInformations;
-    MultipleArchMetaData
-    localPackageinformations;
-    QString repoName;
-    QString localPackagePath;
+    QStringList m_architectures;
+    MultipleArchMetaData m_repositoryMetaInformations;
+    MultipleArchMetaData m_localPackageinformations;
+    QString m_repoName;
+    QString m_localPackagePath;
 
-    QString databasePath;
-    bool error;
-    QString errMsg;
+    QString m_databasePath;
+    bool m_error;
+    QString m_errMsg;
 
 };
 

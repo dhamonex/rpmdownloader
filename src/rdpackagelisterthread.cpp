@@ -21,8 +21,8 @@
 
 #include <QtCore/QDir>
 
-RDPackageListerThread::RDPackageListerThread ( QObject* parent )
-    : QThread ( parent )
+RDPackageListerThread::RDPackageListerThread( QObject *parent )
+  : QThread( parent )
 {
 }
 
@@ -33,19 +33,19 @@ RDPackageListerThread::~RDPackageListerThread()
 
 void RDPackageListerThread::run()
 {
-  error = false;
-  errMsg.clear();
-  repositoryMetaInformations.clear();
-  localPackageinformations.clear();
+  m_error = false;
+  m_errMsg.clear();
+  m_repositoryMetaInformations.clear();
+  m_localPackageinformations.clear();
 
   RepositorySqliteContentLister dbHandler;
 
-  if ( dbHandler.fetchContent ( databasePath, repoName, architectures ) ) {
-    repositoryMetaInformations = dbHandler.getMetaData();
+  if ( dbHandler.fetchContent( m_databasePath, m_repoName, m_architectures ) ) {
+    m_repositoryMetaInformations = dbHandler.getMetaData();
 
   } else {
-    error = true;
-    errMsg = dbHandler.errorMsg();
+    m_error = true;
+    m_errMsg = dbHandler.errorMsg();
     return;
   }
 
@@ -55,39 +55,87 @@ void RDPackageListerThread::run()
 void RDPackageListerThread::getLocalContents()
 {
   // read direcotry contents of local packages
-  foreach ( const QString &arch, architectures ) {
-    MultiplePackageMetaData archDependMetaDatas = getContentsFromDir ( QDir ( localPackagePath + "/" + arch ), arch );
-    localPackageinformations.insert ( arch, archDependMetaDatas );
+  foreach ( const QString &arch, m_architectures ) {
+    MultiplePackageMetaData archDependMetaDatas = getContentsFromDir( QDir( m_localPackagePath + "/" + arch ), arch );
+    m_localPackageinformations.insert( arch, archDependMetaDatas );
 
-    if ( error ) // error occured
+    if ( m_error ) // error occured
       return;
   }
 }
 
-MultiplePackageMetaData RDPackageListerThread::getContentsFromDir ( const QDir & dir, const QString & arch )
+MultiplePackageMetaData RDPackageListerThread::getContentsFromDir( const QDir &dir, const QString &arch )
 {
   MultiplePackageMetaData contents;
 
   if ( !dir.exists() ) {
-    qDebug ( "could not read directory contents of %s. Maybe it is not yet created.", qPrintable ( dir.absolutePath() ) );
+    qDebug( "could not read directory contents of %s. Maybe it is not yet created.", qPrintable( dir.absolutePath() ) );
     return contents;
   }
 
-  QFileInfoList fileInfoList = dir.entryInfoList ( QStringList() << "*.rpm", QDir::Files );
+  QFileInfoList fileInfoList = dir.entryInfoList( QStringList() << "*.rpm", QDir::Files );
 
   foreach ( const QFileInfo &fileInfo, fileInfoList ) {
-    PackageMetaData metaData ( fileInfo.fileName(), arch, fileInfo.size() );
+    PackageMetaData metaData( fileInfo.fileName(), arch, fileInfo.size() );
 
-    if ( contents.contains ( metaData.packageName() ) ) { // at least one verision already found
-      if ( metaData > contents.value ( metaData.packageName() ) ) // the current version is newer than the stored one
-        contents.insert ( metaData.packageName(), metaData );
+    if ( contents.contains( metaData.packageName() ) ) {  // at least one verision already found
+      if ( metaData > contents.value( metaData.packageName() ) )  // the current version is newer than the stored one
+        contents.insert( metaData.packageName(), metaData );
 
     } else { // no version in the contents add current version
-      contents.insert ( metaData.packageName(), metaData );
+      contents.insert( metaData.packageName(), metaData );
     }
   }
 
   return contents;
 }
 
+
+
+void RDPackageListerThread::setDatabasePath( const QString &dbPath )
+{
+  m_databasePath = dbPath;
+}
+
+
+void RDPackageListerThread::setArchitectures( const QStringList &archs )
+{
+  m_architectures = archs;
+}
+
+
+void RDPackageListerThread::setRepoName( const QString &name )
+{
+  m_repoName = name;
+}
+
+
+void RDPackageListerThread::setDownloadPath( const QString &path )
+{
+  m_localPackagePath = path; // for reading the local contents
+}
+
+
+MetaData::MultipleArchMetaData RDPackageListerThread::getRepoPackageInformations() const
+{
+  return m_repositoryMetaInformations;
+}
+
+
+MetaData::MultipleArchMetaData RDPackageListerThread::getLocalPackageInformations() const
+{
+  return m_localPackageinformations;
+}
+
+
+bool RDPackageListerThread::finishedSuccesfull() const
+{
+  return m_error;
+}
+
+
+QString RDPackageListerThread::readErrorMsg() const
+{
+  return m_errMsg;
+}
 
