@@ -124,8 +124,6 @@ PackageVersionAndName PackageMetaData::extractVersionAndName( const QFileInfo &f
     }
 
   }
-  
-  qDebug( "RPM: %s %s", qPrintable( value.packageVersion ), qPrintable( value.packageVersion ) );
 
   return value;
 }
