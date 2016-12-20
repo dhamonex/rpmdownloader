@@ -76,7 +76,7 @@ MultiplePackageMetaData RDPackageListerThread::getContentsFromDir( const QDir &d
   QFileInfoList fileInfoList = dir.entryInfoList( QStringList() << "*.rpm", QDir::Files );
 
   foreach ( const QFileInfo &fileInfo, fileInfoList ) {
-    PackageMetaData metaData( fileInfo.fileName(), arch, fileInfo.size() );
+    PackageMetaData metaData( fileInfo, arch, fileInfo.size() );
 
     if ( contents.contains( metaData.packageName() ) ) {  // at least one verision already found
       if ( metaData > contents.value( metaData.packageName() ) )  // the current version is newer than the stored one

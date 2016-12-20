@@ -19,6 +19,8 @@
  ***************************************************************************/
 #include "packagemetadata.h"
 
+#include <QtCore/QProcess>
+
 PackageMetaData::PackageMetaData()
     : m_fileSize ( 0 )
 {
@@ -52,10 +54,10 @@ PackageMetaData::PackageMetaData ( const QString& fileName, const QString& packa
 {
 }
 
-PackageMetaData::PackageMetaData ( const QString& fileName, const QString& architecture, const quint64 size )
-    : m_file ( fileName ), m_arch ( architecture ), m_fileSize ( size )
+PackageMetaData::PackageMetaData ( const QFileInfo &fileInfo, const QString& architecture, const quint64 size )
+    : m_file( fileInfo.fileName() ), m_arch ( architecture ), m_fileSize ( size )
 {
-  PackageVersionAndName versionAndFileName = extractVersionAndName ( fileName, m_arch );
+  PackageVersionAndName versionAndFileName = extractVersionAndName ( fileInfo, m_arch );
   m_name = versionAndFileName.packageName;
   m_packageVersion = versionAndFileName.packageVersion;
 }
@@ -82,36 +84,48 @@ void PackageMetaData::setSize ( const QString& size )
   }
 }
 
-PackageVersionAndName PackageMetaData::extractVersionAndName ( const QString & fileName, const QString & archString )
+PackageVersionAndName PackageMetaData::extractVersionAndName( const QFileInfo &fileInfo, const QString & archString )
 {
-  QStringList parts = fileName.split ( "-" );
-  QString version;
-  QString rpmName;
-
-  foreach ( const QString &part, parts ) {
-    if ( !part.isEmpty() ) {
-      if ( !part[0].isDigit() || !part.contains ( "." ) ) // it's not a digit so must be part of the rpmname
-        rpmName.isEmpty() ? rpmName += part : rpmName += "-" + part; // add '-' if needed
-      else
-        version.isEmpty() ? version += part : version += "-" + part; // add '-' if needed
-    }
+  QProcess rpmSubprocess;
+  rpmSubprocess.start( "rpm", QStringList() << "-qpi" << fileInfo.absoluteFilePath(), QIODevice::ReadOnly );
+  
+  PackageVersionAndName value;
+  value.packageName = "Unknown";
+  value.packageVersion = "-1";
+  
+  if ( !rpmSubprocess.waitForFinished() ) {
+      return value;
   }
 
+  if ( rpmSubprocess.exitCode() != 0 ) {
+    qCritical("%s, %s", qPrintable( QString( rpmSubprocess.readAllStandardOutput() ) ), qPrintable( QString( rpmSubprocess.readAllStandardError() ) ) );
+    return value;
+  }
+  
+  enum { KeyPos, ValuePos };
+  
+  const QString informations( rpmSubprocess.readAllStandardOutput() );
+  
+  for ( const QString &part : informations.split( QRegExp("[\r\n]"),QString::SkipEmptyParts ) ) {
+    QStringList splittedValues = part.split( ":", QString::SkipEmptyParts );
+    if ( splittedValues.size() != 2 ) {
+      continue;
+    }
+    
+    if ( splittedValues.at( KeyPos ).trimmed() == "Name" ) {
+      value.packageName = splittedValues.at( ValuePos ).trimmed();
+      
+    } else if ( splittedValues.at( KeyPos ).trimmed() == "Version" ) {
+      value.packageVersion = value.packageVersion == "-1" ? 
+        splittedValues.at( ValuePos ).trimmed() : splittedValues.at( ValuePos ).trimmed() + value.packageVersion;
+      
+    } else if ( splittedValues.at( KeyPos ).trimmed() == "Release" ) {
+      value.packageVersion += splittedValues.at( ValuePos ).trimmed();
+    }
 
-  // QRegExp versionRegExp("([\\.\\w]+-\\d+)\\..*"+ archString +".*"); // find out rpm version
-  QRegExp versionRegExp ( "([\\.\\w]+-\\d+.*)\\." + archString + ".*" ); // find out rpm version
-
-  if ( versionRegExp.indexIn ( version ) != -1 )
-    version = versionRegExp.cap ( 1 ); // take first if found
-  else
-    version = "-1";
-
-
-  PackageVersionAndName value;
-
-  value.packageName = rpmName;
-
-  value.packageVersion = version;
+  }
+  
+  qDebug( "RPM: %s %s", qPrintable( value.packageVersion ), qPrintable( value.packageVersion ) );
 
   return value;
 }
@@ -141,38 +155,39 @@ QStringList PackageMetaData::archStringList ( const RPM::Architectures archs )
 
 bool PackageMetaData::versionIsGreaterThan ( const QString & base, const QString & other )
 {
-  if ( base == other ) // versions are identic
-    return false;
-
-  QStringList baseVersionParts = ( base.split ( "." ) );
-
-  QStringList otherVersionParts = fixRpmVersionPart ( other.split ( "." ) );
-
-  for ( int i = 0; i < baseVersionParts.size(); ++i ) {
-    if ( i < otherVersionParts.size() ) { // avoid out of range error
-      // qDebug("baseStringPart %s otherStringPart %s", qPrintable(baseVersionParts.at(i)), qPrintable(otherVersionParts.at(i)));
-      QRegExp noNumberRegExp ( "\\D" );
-
-      if ( baseVersionParts.at ( i ).contains ( noNumberRegExp ) ||
-           otherVersionParts.at ( i ).contains ( noNumberRegExp ) ) {
-        if ( baseVersionParts.at ( i ) < otherVersionParts.at ( i ) ) {
-          return true;
-          break;
-        }
-
-      } else {
-        int basePart = baseVersionParts.at ( i ).toInt();
-        int otherPart = otherVersionParts.at ( i ).toInt();
-
-        if ( basePart < otherPart ) { // one part is newer than the other that implies a newer version
-          return true;
-          break;
-        }
-      }
-    }
-  }
-
-  return false;
+  return other > base;
+//   if ( base == other ) // versions are identic
+//     return false;
+// 
+//   QStringList baseVersionParts = ( base.split ( "." ) );
+// 
+//   QStringList otherVersionParts = fixRpmVersionPart ( other.split ( "." ) );
+// 
+//   for ( int i = 0; i < baseVersionParts.size(); ++i ) {
+//     if ( i < otherVersionParts.size() ) { // avoid out of range error
+//       // qDebug("baseStringPart %s otherStringPart %s", qPrintable(baseVersionParts.at(i)), qPrintable(otherVersionParts.at(i)));
+//       QRegExp noNumberRegExp ( "\\D" );
+// 
+//       if ( baseVersionParts.at ( i ).contains ( noNumberRegExp ) ||
+//            otherVersionParts.at ( i ).contains ( noNumberRegExp ) ) {
+//         if ( baseVersionParts.at ( i ) < otherVersionParts.at ( i ) ) {
+//           return true;
+//           break;
+//         }
+// 
+//       } else {
+//         int basePart = baseVersionParts.at ( i ).toInt();
+//         int otherPart = otherVersionParts.at ( i ).toInt();
+// 
+//         if ( basePart < otherPart ) { // one part is newer than the other that implies a newer version
+//           return true;
+//           break;
+//         }
+//       }
+//     }
+//   }
+// 
+//   return false;
 }
 
 void PackageMetaData::setLocation ( const QString& location )

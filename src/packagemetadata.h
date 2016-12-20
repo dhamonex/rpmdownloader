@@ -26,6 +26,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QMap>
 #include <QtCore/QHash>
+#include <QtCore/QFileInfo>
 
 class PackageMetaData;
 
@@ -49,9 +50,9 @@ class PackageMetaData
   public:
     PackageMetaData();
     PackageMetaData ( const QString &fileName, const QString &packageName, const QString &version, const quint64 size, const QString &architecture, const QString &shaCheckSum, const QString &checkSumAlgorithm, const QString &location );
-    PackageMetaData ( const QString &fileName, const QString &architecture, const quint64 size = -1 ); // tries to extract informations from the filename
+    PackageMetaData ( const QFileInfo &fileInfo, const QString &architecture, const quint64 size = -1 ); // tries to extract informations from the filename
 
-    static PackageVersionAndName extractVersionAndName ( const QString &fileName, const QString &archString );
+    static PackageVersionAndName extractVersionAndName ( const QFileInfo &fileInfo, const QString &archString );
     static QStringList archStringList ( const RPM::Architectures archs ); // generates a string list from the given archs
     static bool versionIsGreaterThan ( const QString &base, const QString &other );
 
