@@ -19,13 +19,13 @@
  ***************************************************************************/
 #include "mainwindow.h"
 
-#include <QtGui/QMenuBar>
-#include <QtGui/QMenu>
-#include <QtGui/QStatusBar>
-#include <QtGui/QMessageBox>
-#include <QtGui/QToolBar>
-#include <QtGui/QCloseEvent>
-#include <QtGui/QFileDialog>
+#include <QMenuBar>
+#include <QMenu>
+#include <QStatusBar>
+#include <QMessageBox>
+#include <QToolBar>
+#include <QCloseEvent>
+#include <QFileDialog>
 
 #include <QtCore/QSettings>
 

@@ -21,7 +21,7 @@
 #ifndef YUMXMLMETAPARSER_H
 #define YUMXMLMETAPARSER_H
 
-#include <QtXml/QXmlStreamReader>
+#include <QXmlStreamReader>
 #include "rddatabaseinserter.h"
 
 class YumXmlMetaParser : public QXmlStreamReader
