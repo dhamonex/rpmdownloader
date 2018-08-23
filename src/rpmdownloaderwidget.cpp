@@ -26,6 +26,7 @@
 #include <QClipboard>
 #include <QtWidgets/QTableWidget>
 #include <QtCore/QTimer>
+#include <QAction>
 
 #include "plainrepositorycontentdownloader.h"
 #include "yumrepositorycontentdownloader.h"

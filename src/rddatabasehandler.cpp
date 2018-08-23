@@ -26,6 +26,7 @@
 #include <QtSql/QSqlRecord>
 #include <QtCore/QMap>
 #include <QtCore/QVariant>
+#include <QtCore/QUuid>
 
 QMap<QString, QStringList> RDDatabaseHandler::tableFields;
 QString RDDatabaseHandler::databaseVersion = "0.11.4";
@@ -63,7 +64,7 @@ void RDDatabaseHandler::setDatabasePath ( const QString & database )
 
 void RDDatabaseHandler::setConnectionName ( const QString & name )
 {
-  connectionName = name;
+  connectionName = name + "_" + QUuid::createUuid().toString();
 }
 
 RDDatabaseHandler::~ RDDatabaseHandler()
